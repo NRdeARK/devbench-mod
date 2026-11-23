@@ -6,7 +6,13 @@
     12,
     16
   ],
-  "background": "#0a2016",
+  "background": {
+    "gradient": [
+      "#0e2c1f",
+      "#1d1014"
+    ],
+    "angle": 160
+  },
   "terminal_padding": [
     14,
     12
@@ -24,7 +30,13 @@
       },
       "min": 44,
       "max": 480,
-      "background": "#12301f",
+      "background": {
+        "gradient": [
+          "#17402d",
+          "#0f2a1d"
+        ],
+        "angle": 180
+      },
       "resizable": false,
       "children": [
         {
@@ -120,11 +132,11 @@
                 "tab": "active",
                 "pane": {
                   "gap": 10,
-                  "radius": 0,
+                  "radius": 12,
                   "background": "background",
                   "lone": true,
                   "border": {
-                    "width": 2,
+                    "width": 1,
                     "color": "#2f6b4a"
                   },
                   "focus": {
@@ -190,8 +202,5 @@
       ]
     }
   ],
-  "theme": "christmas",
-  "font": "PxPlus IBM VGA 8x16",
-  "font_size": 16,
-  "ui_font": "Pixelated MS Sans Serif"
+  "theme": "christmas"
 }

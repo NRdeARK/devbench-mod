@@ -3,21 +3,22 @@
 
 export const THEME_NAME = "christmas";
 
-// Square everything: 8-bit has no rounded corners.
-export const RADIUS = 0;
+// Corner radii: sidebar rows and pane headers keep their soft corners. Only the tree and bulbs are pixel art.
+export const ROW_RADIUS = 8;
+export const HEADER_RADIUS = 10;
 
 // ASCII-only markers so the pixel fonts always have the glyph.
 export const GLYPHS = { blocked: "!", done: "*", idle: "-", working: "|" };
 export const WORKING_FRAMES = ["|", "/", "-", "\\"]; // the classic terminal spinner
 export const SPACE_DOT = { blocked: "!", done: "*", working: "+", idle: "-" };
-export const BLOCKED_CHIP = "NEEDS YOU!";
+export const BLOCKED_CHIP = "Needs you";
 
-// Hats (generated from theme/sprites/*.px). Santa for the dispatcher, an elf for everyone else.
+// Small vector hats (theme/santa.svg, theme/elf.svg). Santa for the dispatcher, an elf for everyone else.
 export const HATS = {
   santa: "mods/devbench-spaces/santa.svg",
   elf: "mods/devbench-spaces/elf.svg",
-  w: 24,
-  h: 16,
+  w: 11,
+  h: 11,
 };
 export const hatFor = (spaceName, tabName) =>
   spaceName === "dispatcher" || tabName === "dispatcher" ? HATS.santa : HATS.elf;
@@ -25,8 +26,8 @@ export const hatFor = (spaceName, tabName) =>
 // Bulb colours, cycled along the light strings.
 export const LIGHT_COLORS = ["#ff4d5e", "#f4c95d", "#34d97a", "#4aa8ff"];
 
-// Pixel snow (generated sprite); plain 2px specks are drawn by the mod.
-export const SNOW = { svg: "mods/devbench-garland/snow.svg", w: 10, h: 10 };
+// Snowflake glyphs drifting under the garland.
+export const FLAKES = ["\u2744", "\u2745", "\u2746"];
 
 // Tree sprite is 21x27 pixels at 5x: 105x135. Ornaments are pixel coordinates inside the sprite.
 export const TREE = {

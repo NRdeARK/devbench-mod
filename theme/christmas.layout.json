@@ -1,15 +1,9 @@
 {
-  "root": {
-    "background": "#0a2016",
-    "font": "PxPlus IBM VGA 8x16",
-    "font_size": 16,
-    "ui_font": "Pixelated MS Sans Serif"
-  },
-  "sidebar": { "background": "#12301f" },
+  "root": { "background": { "gradient": ["#0e2c1f", "#1d1014"], "angle": 160 } },
+  "sidebar": { "background": { "gradient": ["#17402d", "#0f2a1d"], "angle": 180 } },
   "main": { "content": { "pane": {
-    "radius": 0,
     "background": "background",
-    "border": { "width": 2, "color": "#2f6b4a" },
+    "border": { "width": 1, "color": "#2f6b4a" },
     "focus": { "width": 2, "color": "#f4c95d" }
   } } }
 }

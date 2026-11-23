@@ -1,17 +1,17 @@
 // EFFECTS: motion helpers. Each takes an element and returns it, animated.
 // No colors, no strings, no state rules: the mods compose these with core + theme.
 // Flip FX.enabled to false to turn all motion off.
-// 8-bit feel: linear easing and hard blinks, not smooth fades.
+// Bulbs blink hard (linear); everything else eases.
 
 export const FX = { enabled: true };
 
 // Smooth later changes of a property (a row growing when a tab row appears).
 export const smooth = (el, property = "height", ms = 140) =>
-  FX.enabled ? el.transition(property, { duration: ms, easing: "linear" }) : el;
+  FX.enabled ? el.transition(property, { duration: ms, easing: "ease-out" }) : el;
 
 // Blink for things that want attention.
 export const pulse = (el, period = 800, low = 0.2) =>
-  FX.enabled ? el.loop("opacity", { from: 1, to: low, period, easing: "linear" }) : el;
+  FX.enabled ? el.loop("opacity", { from: 1, to: low, period, easing: "ease-in-out" }) : el;
 
 // Cycle text frames (an ASCII spinner). Falls back to the first frame.
 export const cycle = (el, frames, ms = 160) =>
@@ -30,4 +30,4 @@ export const twinkle = (el, i = 0, low = 0.05) =>
 
 // Bob a flake up and down by a few pixels, each on its own period.
 export const drift = (el, i = 0, from = 0, to = 6) =>
-  FX.enabled ? el.loop("top", { from, to, period: 1800 + ((i * 421) % 1800), easing: "linear" }) : el;
+  FX.enabled ? el.loop("top", { from, to, period: 1800 + ((i * 421) % 1800), easing: "ease-in-out" }) : el;

@@ -6,7 +6,7 @@
 import { View, div, image, svg } from "gpui-kit";
 import { tabRows as rowsOf, spaceState, navOrder } from "./core.js";
 import { smooth, marker } from "./effects.js";
-import { GLYPHS, WORKING_FRAMES, SPACE_DOT, hatFor, HATS, RADIUS } from "./christmas.js";
+import { GLYPHS, WORKING_FRAMES, SPACE_DOT, hatFor, HATS, ROW_RADIUS } from "./christmas.js";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
 import { spaces, agents, setAgentOrder, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
 
@@ -28,7 +28,7 @@ function place(s, ps) {
   const tabs = new Set((s.tabs ?? []).map((c) => c.id));
   return ps.find((p) => tabs.has(p.tab) && p.cwd)?.cwd || s.folder;
 }
-const ATTN_H = 30;
+const ATTN_H = 26;
 let AGENTS = []; // agents(), read once per render
 const tabRows = (w) => rowsOf(w, AGENTS); // state logic lives in core.js
 // The agent's icon from the app's program table: a one-color glyph or a picture.
@@ -465,7 +465,7 @@ export default class Spaces extends View {
       .when(true, (el) => smooth(el, "height"))
       .flex_none()
       .justify_center()
-      .rounded(RADIUS)
+      .rounded(ROW_RADIUS)
       .when(on, (el) => el.bg(t.selected))
       .when(!on, (el) => el.hover((s) => s.bg(t.hover)))
       .when(this.pressed === w.id && this.over !== w.id, (el) => el.opacity(0.5))
@@ -517,7 +517,7 @@ export default class Spaces extends View {
         .on_mouse_up("left", () => { run("space.select", { id: w.id }); run("tab.select", { id: c.id }); })
         .gap(6)
         .pr(10)
-        .child(div().relative().size(20).flex_none().child(logo(c.program, 20, t.foreground)).child(image(hatFor(w.name, c.name)).absolute().top(-9).left(-2).w(HATS.w).h(HATS.h)))
+        .child(div().relative().size(18).flex_none().child(logo(c.program, 18, t.foreground)).child(image(hatFor(w.name, c.name)).absolute().top(-4).left(4).w(HATS.w).h(HATS.h)))
         .child(div().flex_1().min_w(0).truncate().child(c.name))
         .child(marker(div().flex_none().text_color(tone(t, c.state)), c.state, GLYPHS, WORKING_FRAMES))));
   }
