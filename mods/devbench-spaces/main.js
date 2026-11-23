@@ -5,7 +5,7 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
-import { spaces, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
+import { spaces, agents, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -26,9 +26,26 @@ function place(s, ps) {
   return ps.find((p) => tabs.has(p.tab) && p.cwd)?.cwd || s.folder;
 }
 const ATTN_H = 20;
-// Tabs whose agent is blocked: the only per-tab rows the list shows (done is a state glyph, not a row).
-const attention = (w) => (w.tabs ?? []).filter((c) => c.status === "blocked");
-const rowHeight = (w) => 30 + attention(w).length * ATTN_H;
+let AGENTS = []; // agents(), read once per render
+// A tab's state from its agents: blocked > working > done only when EVERY agent in it is done > idle.
+// (Herdr's own tab status calls a tab done as soon as any one agent is.)
+function tabState(list) {
+  if (list.some((a) => a.status === "blocked")) return "blocked";
+  if (list.some((a) => a.status === "working")) return "working";
+  return list.length && list.every((a) => a.status === "done") ? "done" : "idle";
+}
+const URGENCY = ["blocked", "done", "working", "idle"];
+// A space's tabs that hold agents, flat, each with its state.
+function tabRows(w) {
+  const rows = [];
+  for (const c of w.tabs ?? []) {
+    const own = AGENTS.filter((a) => a.tab === c.id);
+    if (own.length) rows.push({ id: c.id, name: c.name, state: tabState(own) });
+  }
+  return rows;
+}
+const spaceState = (rows) => URGENCY.find((st) => rows.some((r) => r.state === st)) ?? null;
+const rowHeight = (w) => 30 + tabRows(w).length * ATTN_H;
 const RAIL_CELL = 32;
 // A space's name and its git tail never shrink below this, so a short one ("api")
 // stays readable instead of turning into an ellipsis next to a long branch.
@@ -58,7 +75,7 @@ const MARK = { ansi6: "#22a99a", ansi3: "#e3814f", ansi4: "#5b8def", ansi5: "#8b
 
 // A space speaks up only when something in it needs you.
 export function glyph(status) {
-  return status === "blocked" || status === "done" ? "●" : "·";
+  return status === "blocked" || status === "done" || status === "working" ? "●" : "·";
 }
 
 export function tone(t, status) {
@@ -491,19 +508,20 @@ export default class Spaces extends View {
         h_flex()
           .gap(9)
           .items_center()
-          .child(h_flex().size(18).flex_none().items_center().justify_center().text_color(tone(t, w.status)).child(glyph(w.status)))
+          .child(h_flex().size(18).flex_none().items_center().justify_center().text_color(tone(t, spaceState(tabRows(w)))).child(glyph(spaceState(tabRows(w)))))
           .child(div().flex_1().min_w(SIDE_MIN).truncate().text_color(t.foreground).child(w.name)),
       )
-      .children(attention(w).map((c) => h_flex()
+      .children(tabRows(w).map((c) => h_flex()
         .id(`attn-${c.id}`)
         .h(ATTN_H)
         .pl(27)
         .items_center()
         .text_size(11.5)
-        .text_color(tone(t, "blocked"))
+        .text_color(t.muted)
         .hover((el) => el.bg(t.hover))
         .on_mouse_down("left", () => { this.pressed = null; })
         .on_mouse_up("left", () => { run("space.select", { id: w.id }); run("tab.select", { id: c.id }); })
+        .child(h_flex().size(14).flex_none().items_center().justify_center().text_color(tone(t, c.state)).child(glyph(c.state)))
         .child(div().min_w(0).truncate().child(c.name))));
   }
 
@@ -520,10 +538,11 @@ export default class Spaces extends View {
       .when(!w.active, (el) => el.hover((s) => s.bg(t.hover)))
       .on_click(() => run("space.select", { id: w.id }))
       .child(div().text_color(w.active ? t.foreground : t.muted).child(String(i + 1)))
-      .child(div().absolute().right(5).text_color(tone(t, w.status)).child(glyph(w.status))));
+      .child(div().absolute().right(5).text_color(tone(t, spaceState(tabRows(w)))).child(glyph(spaceState(tabRows(w))))));
   }
 
   render() {
+    AGENTS = agents();
     const t = theme();
     const collapsed = narrow();
     const palette = ["ansi6", "ansi3", "ansi4", "ansi5", "ansi2", "ansi1"];
