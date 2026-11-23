@@ -28,3 +28,7 @@ export const spaceState = (rows) => URGENCY.find((s) => rows.some((r) => r.state
 
 // agent.next / agent.prev order: one stop per tab row, space by space.
 export const navOrder = (spaces, agents) => spaces.flatMap((w) => tabRows(w, agents).map((r) => r.address));
+
+// One entry per agent tab, in sidebar order: who an elf stands for.
+export const roster = (spaces, agents) =>
+  spaces.flatMap((w) => tabRows(w, agents).map((r) => ({ id: r.id, space: w.id, spaceName: w.name, name: r.name, state: r.state })));

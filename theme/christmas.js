@@ -41,3 +41,21 @@ export const TREE = {
   ornaments: SPRITES.tree.lights, // { x, y, c } in sprite pixels: each gets a blinking overlay
   sparkles: [],
 };
+
+// Elves: one per agent tab, working on the tree. Frames are theme/sprites/elf-<frame>.px (12x16),
+// built once per colour variant. The dispatcher's elf is Santa; the rest cycle the other colours.
+export const ELF = {
+  scale: 2,
+  cols: 12,
+  rows: 16,
+  max: 8,
+  variants: ["green", "blue", "purple"],
+  santa: "santa",
+  // state -> frames; two frames means the elf animates between them.
+  frames: { working: ["work1", "work2"], blocked: ["wave"], done: ["cheer"], idle: ["idle"] },
+  svg: (frame, variant) => `mods/devbench-tree/elf-${frame}-${variant}.svg`,
+  flipMs: 650,
+  alert: "!", // blinks above a blocked elf
+};
+export const elfVariant = (entry, i) =>
+  entry.spaceName === "dispatcher" || entry.name === "dispatcher" ? ELF.santa : ELF.variants[i % ELF.variants.length];
