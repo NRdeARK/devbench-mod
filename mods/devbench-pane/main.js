@@ -7,6 +7,8 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { panes, props, run, theme, home, layout } from "herdr";
+import { pulse, smooth } from "./effects.js";
+import { GLYPHS, BLOCKED_CHIP } from "./christmas.js";
 
 // Match the first visible tab frame, including the active child of a stack.
 function paneFrame(node) {
@@ -33,6 +35,9 @@ function icon(p, size, color) {
 function stateColor(t, st) {
   return st === "blocked" ? t.blocked : st === "done" ? t.done : st === "working" ? t.working : null;
 }
+
+// The accent strip: blocked pulses, state changes fade.
+const strip = (el, st) => smooth(st === "blocked" ? pulse(el) : el, "opacity", 250);
 
 function folder(cwd) {
   if (!cwd) return "";
@@ -87,13 +92,13 @@ export default class Pane extends View {
       .text_size(12)
       .on_hover((hovered, cx) => { this.hovered = hovered; cx.notify(); })
       .on_click(() => run("pane.focus", { pane }))
-      .child(div().absolute().left(0).top(0).bottom(0).w(3).bg(sc ?? (p.focused ? t.accent : t.border)))
+      .child(strip(div().absolute().left(0).top(0).bottom(0).w(3).bg(sc ?? (p.focused ? t.accent : t.border)), st))
       .when(Boolean(pic), (el) => el.child(pic))
       .child(div().flex_none().truncate().max_w(260).font_medium().text_color(t.foreground).child(name))
       .child(div().flex_1().truncate().text_color(t.dim).child(folder(p.cwd)))
       .when(st === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
-      .when(st === "blocked", el => el.child(div().flex_none().px(6).h(18).flex().items_center().rounded(5).bg(t.blocked + "26").text_size(10.5).font_semibold().text_color(t.blocked).child("Needs you")))
-      .when(st === "done", el => el.child(div().size(7).flex_none().rounded(4).bg(t.done)))
+      .when(st === "blocked", el => el.child(div().flex_none().px(6).h(18).flex().items_center().rounded(5).bg(t.blocked + "26").text_size(10.5).font_semibold().text_color(t.blocked).child(BLOCKED_CHIP)))
+      .when(st === "done", el => el.child(div().flex_none().text_color(t.done).child(GLYPHS.done)))
       .when(this.hovered, el => el
         .child(this.button(t, `ph-r-${pane}`, "split-right", "pane.split", { direction: "right", pane }))
         .child(this.button(t, `ph-d-${pane}`, "split-down", "pane.split", { direction: "down", pane }))

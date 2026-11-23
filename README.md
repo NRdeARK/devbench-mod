@@ -5,3 +5,9 @@ Herdr layout + mod for a flat, agent-list-free sidebar.
 - `mods/devbench-pane`: clone of shipped `pane` header: tinted by agent state, 3px left accent strip (state color, accent when focused), 16px logo. Layout also has a 2px focus border, radius 12, gap 10.
 - `./install.sh [--dry-run]` copies both into `~/.config/herdr-app`; then `herdr-app do layout.switch '{"name":"devbench"}'`.
 Derived from Herdr's shipped mod; re-clone to pick up upstream changes.
+
+## Layers
+- `core/`: pure state logic (tab state, rows, nav order). Tested: `node test/core.test.mjs`.
+- `effects/`: motion helpers (smooth height/opacity, pulse, glyph-frame cycling). `FX.enabled=false` turns motion off.
+- `theme/`: Christmas look: `christmas.json` (Herdr theme), `christmas.js` (glyphs, working snowflake frames, hat rule), `santa.svg` / `elf.svg`. Dispatcher gets the Santa hat, every other agent an elf hat.
+- Mods (`mods/*`) only compose the three. `install.sh` copies each layer's files next to the mods and `theme/*.json` into `themes/`.

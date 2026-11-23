@@ -4,6 +4,9 @@
 // switch, right-click for its menu, drag to reorder.
 
 import { View, div, image, svg } from "gpui-kit";
+import { tabRows as rowsOf, spaceState, navOrder } from "./core.js";
+import { smooth, marker } from "./effects.js";
+import { GLYPHS, WORKING_FRAMES, SPACE_DOT, hatFor } from "./christmas.js";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
 import { spaces, agents, setAgentOrder, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
 
@@ -27,36 +30,12 @@ function place(s, ps) {
 }
 const ATTN_H = 20;
 let AGENTS = []; // agents(), read once per render
-// A tab's state from its agents: blocked > working > done only when EVERY agent in it is done > idle.
-// (Herdr's own tab status calls a tab done as soon as any one agent is.)
-function tabState(list) {
-  if (list.some((a) => a.status === "blocked")) return "blocked";
-  if (list.some((a) => a.status === "working")) return "working";
-  return list.length && list.every((a) => a.status === "done") ? "done" : "idle";
-}
-const URGENCY = ["blocked", "done", "working", "idle"];
-// A space's tabs that hold agents, flat, each with its state.
-function tabRows(w) {
-  const rows = [];
-  for (const c of w.tabs ?? []) {
-    const own = AGENTS.filter((a) => a.tab === c.id);
-    if (own.length) {
-    const state = tabState(own);
-    // Logo of the agent that decides the state (first match), else the first agent.
-    const lead = own.find((a) => a.status === state) ?? own[0];
-    rows.push({ id: c.id, name: c.name, state, program: lead.program, address: lead.address });
-    }
-  }
-  return rows;
-}
-// Tab-row marker at the row's end: a shape per state, not only a color.
-const MARKER = { blocked: "!", working: "◐", done: "✓", idle: "·" };
+const tabRows = (w) => rowsOf(w, AGENTS); // state logic lives in core.js
 // The agent's icon from the app's program table: a one-color glyph or a picture.
 function logo(p, size, color) {
   if (!p?.icon) return h_flex().size(size).flex_none();
   return p.tint ? svg(p.icon).size(size).flex_none().text_color(color) : image(p.icon).w(size).h(size).flex_none();
 }
-const spaceState = (rows) => URGENCY.find((st) => rows.some((r) => r.state === st)) ?? null;
 const GAP = 10; // space between spaces
 const rowHeight = (w) => 30 + tabRows(w).length * ATTN_H;
 const RAIL_CELL = 32;
@@ -483,6 +462,7 @@ export default class Spaces extends View {
       .px(8)
       .h(rowHeight(w))
       .mb(GAP)
+      .when(true, (el) => smooth(el, "height"))
       .flex_none()
       .justify_center()
       .rounded(8)
@@ -522,7 +502,7 @@ export default class Spaces extends View {
         h_flex()
           .gap(9)
           .items_center()
-          .child(h_flex().size(18).flex_none().items_center().justify_center().text_color(tone(t, spaceState(tabRows(w)))).child(glyph(spaceState(tabRows(w)))))
+          .child(h_flex().size(18).flex_none().items_center().justify_center().text_color(tone(t, spaceState(tabRows(w)))).child(SPACE_DOT[spaceState(tabRows(w))] ?? ""))
           .child(div().flex_1().min_w(SIDE_MIN).truncate().font_semibold().text_color(t.foreground).child(w.name)),
       )
       .children(tabRows(w).map((c) => h_flex()
@@ -537,9 +517,9 @@ export default class Spaces extends View {
         .on_mouse_up("left", () => { run("space.select", { id: w.id }); run("tab.select", { id: c.id }); })
         .gap(6)
         .pr(10)
-        .child(logo(c.program, 14, t.foreground))
+        .child(div().relative().size(14).flex_none().child(logo(c.program, 14, t.foreground)).child(image(hatFor(w.name, c.name)).absolute().top(-5).left(-3).w(10).h(10)))
         .child(div().flex_1().min_w(0).truncate().child(c.name))
-        .child(div().flex_none().text_color(tone(t, c.state)).child(MARKER[c.state]))));
+        .child(marker(div().flex_none().text_color(tone(t, c.state)), c.state, GLYPHS, WORKING_FRAMES))));
   }
 
   compact({ w, i }, t) {
@@ -561,7 +541,7 @@ export default class Spaces extends View {
   render() {
     AGENTS = agents();
     // agent.next / agent.prev (alt-down / alt-up) follow the list as drawn: one stop per tab row.
-    setAgentOrder(spaces().flatMap((w) => tabRows(w).map((r) => r.address)));
+    setAgentOrder(navOrder(spaces(), AGENTS));
     const t = theme();
     const collapsed = narrow();
     const palette = ["ansi6", "ansi3", "ansi4", "ansi5", "ansi2", "ansi1"];
