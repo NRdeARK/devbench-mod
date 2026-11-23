@@ -68,7 +68,7 @@ export function bulbs(lights) {
   return out;
 }
 
-// The crew: three pixel characters (theme/sprites/char-*.px, 16x13 at scale 3) that wander in front of the
+// The crew: three pixel characters (theme/sprites/char-*.px: 16x13 art, tripled, with a 2px light outline) that wander in front of the
 // tree, rest, and chat now and then. Positions are px from the tree's centre; the stage is the strip at its foot.
 export const CREW = {
   tickMs: 400,
@@ -80,6 +80,7 @@ export const CREW = {
     { key: "codex", name: "Sol (Codex)" },
   ],
   svg: (key) => `mods/devbench-tree/char-${key}.svg`,
-  size: { w: 48, h: 39 },
+  // drawn size comes from the built sprite (outline included); all three share it
+  size: { w: SPRITES["char-claude"].cols * SPRITES["char-claude"].scale, h: SPRITES["char-claude"].rows * SPRITES["char-claude"].scale },
   lines: ["nice tree!", "ho ho ho", "more lights?", "ship it!", "tests green", "cocoa break", "so sparkly", "need review?", "merry xmas", "brb"],
 };

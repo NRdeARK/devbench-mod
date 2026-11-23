@@ -3,11 +3,32 @@
 //                         ->  theme/generated/sprites.meta.js  (sizes + twinkling-light positions)
 //  2. theme/<name>.layout.json merged into layouts/devbench.base.json -> layouts/devbench.json
 // .px format: "# scale N", "# K=#rrggbb ..." palette lines, then the grid ('.' = transparent).
+// Optional "# upscale N" repeats every cell N x N (finer pixels, scale becomes scale/N) and
+// "# outline #rrggbb T" adds a T-cell outline round the shape, so a thin border costs no hand drawing.
 // Palette keys 1-4 are string lights: drawn dim in the SVG, and listed in the meta so a mod can
 // blink an overlay pixel on top of each.
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
 
 const LIGHT_KEYS = "1234";
+
+// Pad the grid by t cells and mark every empty cell within t cells (8-way) of a shape cell with "X".
+export function outline(grid, t) {
+  const h = grid.length, w = grid[0].length;
+  const at = (x, y) => grid[y - t]?.[x - t] ?? ".";
+  const out = [];
+  for (let y = 0; y < h + 2 * t; y++) {
+    let row = "";
+    for (let x = 0; x < w + 2 * t; x++) {
+      let ch = at(x, y);
+      if (ch === ".") {
+        near: for (let dy = -t; dy <= t; dy++) for (let dx = -t; dx <= t; dx++) if (at(x + dx, y + dy) !== ".") { ch = "X"; break near; }
+      }
+      row += ch;
+    }
+    out.push(row);
+  }
+  return out;
+}
 
 export function parsePx(text, overrides = {}) {
   let scale = 1;
@@ -23,14 +44,23 @@ export function parsePx(text, overrides = {}) {
     } else grid.push(line);
   }
   Object.assign(palette, overrides);
-  const cols = Math.max(...grid.map((r) => r.length));
-  const ragged = grid.findIndex((r) => r.length !== cols);
-  if (ragged >= 0) throw new Error(`row ${ragged} is ${grid[ragged].length} wide, expected ${cols}`);
+  const width = Math.max(...grid.map((r) => r.length));
+  const ragged = grid.findIndex((r) => r.length !== width);
+  if (ragged >= 0) throw new Error(`row ${ragged} is ${grid[ragged].length} wide, expected ${width}`);
+  let cells = grid;
+  const up = Number(text.match(/^#\s*upscale\s+(\d+)/m)?.[1] ?? 1);
+  if (up > 1) cells = cells.flatMap((r) => Array(up).fill([...r].map((c) => c.repeat(up)).join("")));
+  const ol = text.match(/^#\s*outline\s+(#[0-9a-fA-F]{6})\s+(\d+)/m);
+  if (ol) {
+    palette.X = ol[1];
+    cells = outline(cells, Number(ol[2]));
+  }
+  const cols = cells[0].length;
   const lights = [];
-  grid.forEach((row, y) => [...row].forEach((ch, x) => {
+  cells.forEach((row, y) => [...row].forEach((ch, x) => {
     if (LIGHT_KEYS.includes(ch) && palette[ch]) lights.push({ x, y, c: palette[ch] });
   }));
-  return { scale, palette, grid, cols, rows: grid.length, lights };
+  return { scale: scale / up, palette, grid: cells, cols, rows: cells.length, lights };
 }
 
 export function pxToSvg(text, overrides = {}) {
