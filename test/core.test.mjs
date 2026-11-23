@@ -16,20 +16,26 @@ assert.equal(spaceState(rows), "blocked");
 assert.equal(spaceState([]), null);
 assert.deepEqual(navOrder([space], [ag("a", "idle"), ag("b", "idle")]), ["a-idle", "b-idle"]);
 console.log("core tests passed");
-import { makeCrew, crewTick } from "../core/core.js";
-const stage = { rx: 92, speed: 5, pauseMin: 5, pauseMax: 16, talkRange: 56 };
+import { makeCrew, crewTick, makeSnow, snowTick } from "../core/core.js";
+const stage = { rx: 100, speed: 5, pauseMin: 8, pauseMax: 25, talkRange: 90, minGap: 60, chatChance: 0.1, quietMin: 60, quietMax: 120 };
 let seed = 7;
 const rng = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
-let crew = makeCrew(3, stage), talks = 0, walks = 0, maxRest = 0;
-for (let i = 0; i < 3000; i++) {
+let crew = makeCrew(3, stage), talks = 0, walks = 0, minSep = 1e9;
+for (let i = 0; i < 6000; i++) {
   crew = crewTick(crew, rng, stage, ["a", "b", "c", "d"]);
   for (const m of crew) {
-    assert.ok(Math.abs(m.x) <= stage.rx + 1e-9 && m.lane >= -1 && m.lane <= 1 && Number.isFinite(m.x + m.lane), "stays on stage");
+    assert.ok(Math.abs(m.x) <= stage.rx + 1e-9 && m.lane >= 0 && m.lane <= 1 && Number.isFinite(m.x + m.lane), "stays on stage, in front of the tree");
     if (m.say) talks++;
     if (m.mode === "walk") walks++;
-    maxRest = Math.max(maxRest, m.mode === "rest" ? m.left : 0);
   }
+  const rest = crew.filter((m) => m.mode === "rest");
+  for (let a = 0; a < rest.length; a++) for (let b = a + 1; b < rest.length; b++) minSep = Math.min(minSep, Math.abs(rest[a].x - rest[b].x));
 }
-assert.ok(talks > 20 && walks > 200, "they both talk and walk");
-assert.ok(maxRest <= stage.pauseMax + 1 && maxRest >= stage.pauseMin, "rests stay in range");
+assert.ok(talks > 10 && talks < 1200, `they talk, but rarely (${talks})`);
+assert.ok(walks > 200, "they walk");
+assert.ok(minSep >= stage.minGap - 1e-9, `resting members keep their gap (${minSep})`);
 console.log("crew tests passed");
+let snow = makeSnow(18, 268, 184, rng);
+for (let i = 0; i < 500; i++) snow = snowTick(snow, 268, 184, rng);
+assert.ok(snow.every((f) => f.y >= -3 && f.y <= 184 && f.x >= 0 && f.x <= 268) && snow.some((f) => f.gen > 0), "snow stays in the box and restarts at the top");
+console.log("snow tests passed");

@@ -68,11 +68,12 @@ export function bulbs(lights) {
   return out;
 }
 
-// The crew: three pixel characters (theme/sprites/char-*.px, 16x13 at scale 3) that wander round the
-// tree, rest, and chat. Positions are px from the tree's centre; the stage is the strip at its foot.
+// The crew: three pixel characters (theme/sprites/char-*.px, 16x13 at scale 3) that wander in front of the
+// tree, rest, and chat now and then. Positions are px from the tree's centre; the stage is the strip at its foot.
 export const CREW = {
   tickMs: 400,
-  stage: { rx: 92, ry: 12, speed: 5, pauseMin: 5, pauseMax: 16, talkRange: 56 },
+  stage: { rx: 100, ry: 14, speed: 5, pauseMin: 8, pauseMax: 25, talkRange: 90, minGap: 60, chatChance: 0.1, quietMin: 60, quietMax: 120 },
+  snow: { flakes: 22, color: "#c0caf5" },
   members: [
     { key: "claude", name: "Claude" },
     { key: "agy", name: "Antigravity" },

@@ -29,21 +29,33 @@ export const spaceState = (rows) => URGENCY.find((s) => rows.some((r) => r.state
 // agent.next / agent.prev order: one stop per tab row, space by space.
 export const navOrder = (spaces, agents) => spaces.flatMap((w) => tabRows(w, agents).map((r) => r.address));
 
-// --- The crew: three characters that wander round the tree, rest, and talk. Pure: randomness is injected. ---
-// A member: { x, lane, mode: "walk"|"rest", left (rest ticks), tx, tl (walk target), say, reply }.
-// x is px from the tree's centre; lane is -1 (behind the tree) .. 1 (in front), so a walk can swing round it.
-export const SAY_TICKS = 4;
+// --- The crew: three characters that wander at the tree's foot, rest, and now and then talk. Pure: randomness is injected. ---
+// A member: { x, lane, mode: "walk"|"rest", left (rest ticks), tx, tl (walk target), quiet (ticks before the
+// next chat), say, reply }. x is px from the tree's centre; lane is 0 (back of the stage) .. 1 (front).
+export const SAY_TICKS = 6;
 
 export const makeCrew = (n, stage) => Array.from({ length: n }, (_v, i) => ({
-  x: Math.round(((i + 0.5) / n * 2 - 1) * stage.rx * 0.7),
-  lane: i % 2 ? 1 : -1,
-  mode: "rest", left: 2 + i * 3, tx: 0, tl: 0, say: null, reply: null,
+  x: Math.round(((i + 0.5) / n * 2 - 1) * stage.rx * 0.9),
+  lane: i % 2 ? 1 : 0,
+  mode: "rest", left: 3 + i * 4, tx: 0, tl: 0, quiet: 20 + i * 15, say: null, reply: null,
 }));
 
 const between = (rng, lo, hi) => lo + Math.floor(rng() * (hi - lo + 1));
 
-function step(m, rng, stage) {
-  const s = { ...m, say: m.say && m.say.left > 1 ? { ...m.say, left: m.say.left - 1 } : null };
+// A walk target for member i that keeps stage.minGap from every other member (where they are and where they head).
+function pickTarget(crew, i, rng, stage) {
+  for (let tries = 0; tries < 10; tries++) {
+    const tx = between(rng, -stage.rx, stage.rx);
+    if (Math.abs(tx - crew[i].x) < stage.rx / 4) continue;
+    const clear = crew.every((o, j) => j === i || (Math.abs(o.x - tx) >= stage.minGap && (o.mode !== "walk" || Math.abs(o.tx - tx) >= stage.minGap)));
+    if (clear) return tx;
+  }
+  return null;
+}
+
+function step(crew, i, rng, stage) {
+  const m = crew[i];
+  const s = { ...m, quiet: Math.max(0, m.quiet - 1), say: m.say && m.say.left > 1 ? { ...m.say, left: m.say.left - 1 } : null };
   if (m.reply) {
     if (m.reply.delay > 1) s.reply = { ...m.reply, delay: m.reply.delay - 1 };
     else { s.say = { text: m.reply.text, left: SAY_TICKS }; s.reply = null; }
@@ -54,24 +66,38 @@ function step(m, rng, stage) {
     return { ...s, x: m.x + Math.sign(dx) * stage.speed, lane: m.lane + (m.tl - m.lane) * (stage.speed / d) };
   }
   if (m.left > 1 || s.say || s.reply) return { ...s, left: Math.max(1, m.left - 1) };
-  // rest is over: pick somewhere at least a quarter of the stage away, behind or in front of the tree
-  let tx = between(rng, -stage.rx, stage.rx);
-  if (Math.abs(tx - m.x) < stage.rx / 4) tx = m.x > 0 ? -stage.rx / 2 : stage.rx / 2;
-  return { ...s, mode: "walk", tx, tl: rng() < 0.5 ? -1 : 1 };
+  const tx = pickTarget(crew, i, rng, stage);
+  if (tx === null) return { ...s, left: 3 }; // no clear spot: stay a little longer
+  return { ...s, mode: "walk", tx, tl: rng() };
 }
 
-// Advance every member one tick; two members resting near each other may start a chat.
+// Advance every member one tick; two members resting near each other may start a (rare) chat.
 export function crewTick(crew, rng, stage, lines) {
-  const next = crew.map((m) => step(m, rng, stage));
+  // one at a time, each seeing the others' latest move, so two never pick the same spot in one tick
+  const next = [...crew];
+  for (let i = 0; i < next.length; i++) next[i] = step(next, i, rng, stage);
+  const free = (m) => m.mode === "rest" && !m.say && !m.reply && m.quiet === 0;
   for (let i = 0; i < next.length; i++) for (let j = i + 1; j < next.length; j++) {
     const a = next[i], b = next[j];
-    const free = (m) => m.mode === "rest" && !m.say && !m.reply;
-    if (!free(a) || !free(b) || Math.abs(a.x - b.x) > stage.talkRange || rng() > 0.35) continue;
+    if (!free(a) || !free(b) || Math.abs(a.x - b.x) > stage.talkRange || rng() > stage.chatChance) continue;
     const l1 = between(rng, 0, lines.length - 1);
     const l2 = (l1 + 1 + between(rng, 0, lines.length - 2)) % lines.length;
     const hold = SAY_TICKS * 2 + 2;
-    next[i] = { ...a, say: { text: lines[l1], left: SAY_TICKS }, left: Math.max(a.left, hold) };
-    next[j] = { ...b, reply: { text: lines[l2], delay: SAY_TICKS }, left: Math.max(b.left, hold) };
+    next[i] = { ...a, say: { text: lines[l1], left: SAY_TICKS }, left: Math.max(a.left, hold), quiet: between(rng, stage.quietMin, stage.quietMax) };
+    next[j] = { ...b, reply: { text: lines[l2], delay: SAY_TICKS }, left: Math.max(b.left, hold), quiet: between(rng, stage.quietMin, stage.quietMax) };
   }
   return next;
+}
+
+// --- Snow: flakes fall at their own speed and sway a little; one that reaches the bottom starts again at the top
+// (gen counts restarts so a view can treat it as a new element instead of animating it back up). ---
+export const makeSnow = (n, w, h, rng) => Array.from({ length: n }, () => ({
+  x: rng() * w, y: rng() * h, v: 6 + rng() * 6, big: rng() < 0.3, gen: 0,
+}));
+export function snowTick(flakes, w, h, rng) {
+  return flakes.map((f) => {
+    const y = f.y + f.v;
+    if (y > h) return { ...f, x: rng() * w, y: -3, v: 6 + rng() * 6, gen: f.gen + 1 };
+    return { ...f, y, x: Math.min(w, Math.max(0, f.x + (rng() - 0.5) * 6)) };
+  });
 }
