@@ -12,3 +12,9 @@ Derived from Herdr's shipped mod; re-clone to pick up upstream changes.
 - `theme/`: Christmas look: `christmas.json` (Herdr theme), `christmas.js` (glyphs, working snowflake frames, hat rule), `santa.svg` / `elf.svg`. Dispatcher gets the Santa hat, every other agent an elf hat.
 - `mods/devbench-tree`, `mods/devbench-garland`: decoration blocks in the sidebar (tree with twinkling ornaments and a pulsing star; light string with snowflakes).
 - Mods (`mods/*`) only compose the three. `install.sh` copies each layer's files next to the mods and `theme/*.json` into `themes/`.
+
+## 8-bit pass
+- Sprites are ASCII grids in `theme/sprites/*.px` (tree, Santa hat, elf hat, snow). `node build.mjs` renders them to crisp SVGs in `theme/generated/` and merges the layout paint. Tests: `node test/build.test.mjs`.
+- Square corners everywhere (`RADIUS = 0` in `theme/christmas.js`), flat colours, ASCII markers (`! * - |/-\` spinner), blinking lights with linear easing.
+- Fonts: layout paint sets the terminal font to "PxPlus IBM VGA 8x16" and the UI font to "Pixelated MS Sans Serif" (both ship with Herdr's win98 mod). Remove the `font`, `font_size`, `ui_font` keys in `theme/christmas.layout.json` to go back.
+- `herdr-app shot <file.png>` captures the window; handy for checking the result.

@@ -10,7 +10,7 @@ for mod in devbench-spaces devbench-pane devbench-garland devbench-tree; do
   run mkdir -p "$home/mods/$mod"
   run cp "$here/mods/$mod/main.js" "$here/mods/$mod/mod.json" "$home/mods/$mod/"
   run cp "$here/core/core.js" "$here/effects/effects.js" "$here"/theme/*.js "$home/mods/$mod/"
-  run cp "$here"/theme/*.svg "$home/mods/$mod/"
+  run cp "$here"/theme/generated/*.svg "$home/mods/$mod/"
 done
 run mkdir -p "$home/layouts" "$home/themes"
 run cp "$here/layouts/devbench.json" "$home/layouts/devbench.json"
