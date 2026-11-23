@@ -37,7 +37,7 @@ function logo(p, size, color) {
   return p.tint ? svg(p.icon).size(size).flex_none().text_color(color) : image(p.icon).w(size).h(size).flex_none();
 }
 const GAP = 10; // space between spaces
-const rowHeight = (w) => 30 + tabRows(w).length * ATTN_H;
+const rowHeight = (w, shut) => 30 + (shut ? 0 : tabRows(w).length * ATTN_H);
 const RAIL_CELL = 32;
 // A space's name and its git tail never shrink below this, so a short one ("api")
 // stays readable instead of turning into an ellipsis next to a long branch.
@@ -98,6 +98,8 @@ export default class Spaces extends View {
       if (!this.reconnecting || typeof this.reconnecting !== "object" || Array.isArray(this.reconnecting)) this.reconnecting = {};
       for (const state of Object.values(this.reconnecting)) state.busy = false;
     } catch { this.reconnecting = {}; }
+    // spaces whose agent rows are folded away (the chevron on the space row), kept across restarts
+    try { this.shut = new Set(JSON.parse(localStorage.getItem("devbench.spaces.shut") ?? "[]")); } catch { this.shut = new Set(); }
     try { this.folded = new Set(JSON.parse(localStorage.getItem("machines.folded") ?? "[]")); } catch { this.folded = new Set(); }
     this.refreshMachines(cx);
     cx.timer.every(15000, cx => this.refreshMachines(cx));
@@ -455,12 +457,14 @@ export default class Spaces extends View {
 
   row({ w, i, g, tree }, t) {
     const on = w.active;
+    const rows = tabRows(w);
+    const shut = this.shut.has(w.id) && rows.length > 0;
     const fromIndex = this.pressed === null ? -1 : spaces().findIndex(s => s.id === this.pressed);
     return v_flex()
       .relative()
       .id(`space-${w.id}`)
       .px(8)
-      .h(rowHeight(w))
+      .h(rowHeight(w, shut))
       .mb(GAP)
       .when(true, (el) => smooth(el, "height"))
       .flex_none()
@@ -503,9 +507,23 @@ export default class Spaces extends View {
           .gap(9)
           .items_center()
           .child(h_flex().size(18).flex_none().items_center().justify_center().text_color(tone(t, spaceState(tabRows(w)))).child(SPACE_DOT[spaceState(tabRows(w))] ?? ""))
-          .child(div().flex_1().min_w(SIDE_MIN).truncate().font_semibold().text_color(t.foreground).child(w.name)),
+          .child(div().flex_1().min_w(SIDE_MIN).truncate().font_semibold().text_color(t.foreground).child(w.name))
+          // how many agent tabs are hidden, and the button that folds / unfolds them
+          .when(shut, (el) => el.child(div().flex_none().text_size(11).text_color(t.dim).child(`${rows.length}`)))
+          .when(rows.length > 0, (el) => el.child(
+            h_flex().id(`fold-${w.id}`).size(22).flex_none().items_center().justify_center().rounded(5)
+              .hover((b) => b.bg(t.hover))
+              .tooltip(shut ? "Show agents" : "Hide agents")
+              .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+              .on_click((_e, cx) => {
+                cx.stop_propagation();
+                if (this.shut.has(w.id)) this.shut.delete(w.id); else this.shut.add(w.id);
+                localStorage.setItem("devbench.spaces.shut", JSON.stringify([...this.shut]));
+                cx.notify();
+              })
+              .child(svg(`mods/workspace-chrome/chevron-${shut ? "right" : "down"}.svg`).size(11).text_color(t.dim)))),
       )
-      .children(tabRows(w).map((c) => h_flex()
+      .children((shut ? [] : rows).map((c) => h_flex()
         .id(`attn-${c.id}`)
         .h(ATTN_H)
         .pl(27)
