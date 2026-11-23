@@ -463,10 +463,10 @@ export default class Spaces extends View {
       .when(g.behind > 0, (el) => el.child(div().flex_none().text_color(t.ansi1).child(`\u2193${g.behind}`)));
   }
 
-  // Step to the next / previous visible tab row (folded spaces are skipped), wrapping round.
+  // Step to the next / previous tab row, wrapping round. Folded spaces are entered too: focus unfolds them (see render).
   walk(dir) {
     AGENTS = agents();
-    const order = spaces().flatMap((w) => shown(tabRows(w), this.shut.has(w.id)).map((r) => ({ space: w.id, tab: r.id })));
+    const order = spaces().flatMap((w) => tabRows(w).map((r) => ({ space: w.id, tab: r.id })));
     if (!order.length) return;
     const at = order.findIndex((r) => r.tab === focused()?.tab);
     const to = at < 0 ? (dir > 0 ? 0 : order.length - 1) : (at + dir + order.length) % order.length;
