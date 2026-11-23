@@ -16,21 +16,20 @@ assert.equal(spaceState(rows), "blocked");
 assert.equal(spaceState([]), null);
 assert.deepEqual(navOrder([space], [ag("a", "idle"), ag("b", "idle")]), ["a-idle", "b-idle"]);
 console.log("core tests passed");
-
-import { slotsFor, crewStep, slotOf, placed, CYCLE } from "../core/core.js";
-const sl = slotsFor(35, 46, 4);
-assert.ok(sl.length >= 12 && sl.every((s) => s.x > 0 && s.x < 140 && s.y > 0 && s.y < 184), "slots inside the tree box");
-assert.deepEqual(crewStep(0, 0), { k: 0, ph: 0 });
-assert.deepEqual(crewStep(CYCLE, 0), { k: 1, ph: 0 });
-assert.ok(placed(0, 3, sl.length, 4).size <= 2, "staggered members may already have landed one");
-assert.ok(placed(4, 3, sl.length, 4).has(slotOf(0, 0, 3, sl.length)), "first bauble lands at phase 4");
-assert.ok(placed(400, 3, sl.length, 4).size <= sl.length, "never more baubles than slots");
+import { makeCrew, crewTick } from "../core/core.js";
+const stage = { rx: 92, speed: 5, pauseMin: 5, pauseMax: 16, talkRange: 56 };
+let seed = 7;
+const rng = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+let crew = makeCrew(3, stage), talks = 0, walks = 0, maxRest = 0;
+for (let i = 0; i < 3000; i++) {
+  crew = crewTick(crew, rng, stage, ["a", "b", "c", "d"]);
+  for (const m of crew) {
+    assert.ok(Math.abs(m.x) <= stage.rx + 1e-9 && m.lane >= -1 && m.lane <= 1 && Number.isFinite(m.x + m.lane), "stays on stage");
+    if (m.say) talks++;
+    if (m.mode === "walk") walks++;
+    maxRest = Math.max(maxRest, m.mode === "rest" ? m.left : 0);
+  }
+}
+assert.ok(talks > 20 && walks > 200, "they both talk and walk");
+assert.ok(maxRest <= stage.pauseMax + 1 && maxRest >= stage.pauseMin, "rests stay in range");
 console.log("crew tests passed");
-
-import { crewPos } from "../core/core.js";
-const orb = { rx: 80, ry: 14, periodTicks: 100 };
-const p0 = crewPos(0, 0, 3, orb), p25 = crewPos(25, 0, 3, orb), p75 = crewPos(75, 0, 3, orb);
-assert.ok(Math.abs(p0.x - 80) < 1e-9 && p0.front, "starts at the right edge");
-assert.ok(p25.front && Math.abs(p25.x) < 1e-6, "quarter lap: in front, centred");
-assert.ok(!p75.front, "three quarters: behind the tree");
-console.log("orbit tests passed");

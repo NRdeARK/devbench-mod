@@ -29,47 +29,49 @@ export const spaceState = (rows) => URGENCY.find((s) => rows.some((r) => r.state
 // agent.next / agent.prev order: one stop per tab row, space by space.
 export const navOrder = (spaces, agents) => spaces.flatMap((w) => tabRows(w, agents).map((r) => r.address));
 
-// --- Decorating crew: who hangs what where, as a pure function of a tick counter. ---
-// Each member loops through a CYCLE of ticks: 0 carry a bauble, 1-2 walk to the tree, 3 throw it,
-// 4 it lands (hop), 5-7 walk home, 8-9 rest. Members are staggered so they never move in lockstep.
-export const CYCLE = 10;
-export const PLACED_AT = 4;
-export const THROW_AT = 3;
-const STAGGER = 4;
+// --- The crew: three characters that wander round the tree, rest, and talk. Pure: randomness is injected. ---
+// A member: { x, lane, mode: "walk"|"rest", left (rest ticks), tx, tl (walk target), say, reply }.
+// x is px from the tree's centre; lane is -1 (behind the tree) .. 1 (in front), so a walk can swing round it.
+export const SAY_TICKS = 4;
 
-// Branch spots inside the tree silhouette, in px relative to the tree's top-left.
-export function slotsFor(cols, rows, px) {
-  const cx = cols / 2, out = [];
-  [13, 17, 21, 25, 29, 33, 37].forEach((r, i) => {
-    const hw = Math.min(15.5, 1.5 + (r - 8) * 0.38);
-    const dx = [0.7, i % 2 ? 0.25 : 0.4];
-    for (const d of dx) for (const sgn of (d === 0.7 ? [-1, 1] : [i % 2 ? 1 : -1])) out.push({ x: Math.round((cx + sgn * hw * d) * px), y: r * px });
-  });
-  return out;
-}
+export const makeCrew = (n, stage) => Array.from({ length: n }, (_v, i) => ({
+  x: Math.round(((i + 0.5) / n * 2 - 1) * stage.rx * 0.7),
+  lane: i % 2 ? 1 : -1,
+  mode: "rest", left: 2 + i * 3, tx: 0, tl: 0, say: null, reply: null,
+}));
 
-export function crewStep(tick, c) {
-  const t = tick + c * STAGGER;
-  return { k: Math.floor(t / CYCLE), ph: t % CYCLE };
-}
-export const slotOf = (k, c, n, slots) => (k * n + c * 5) % slots;
-export const colorOf = (k, c, colors) => (k * 3 + c) % colors;
+const between = (rng, lo, hi) => lo + Math.floor(rng() * (hi - lo + 1));
 
-// Baubles currently hanging: slot -> colour index. A slot is re-hung when a later cycle picks it again.
-export function placed(tick, members, slots, colors) {
-  const out = new Map();
-  for (let c = 0; c < members; c++) {
-    const { k, ph } = crewStep(tick, c);
-    for (let j = Math.max(0, k - slots); j <= k; j++) {
-      if (j < k || ph >= PLACED_AT) out.set(slotOf(j, c, members, slots), colorOf(j, c, colors));
-    }
+function step(m, rng, stage) {
+  const s = { ...m, say: m.say && m.say.left > 1 ? { ...m.say, left: m.say.left - 1 } : null };
+  if (m.reply) {
+    if (m.reply.delay > 1) s.reply = { ...m.reply, delay: m.reply.delay - 1 };
+    else { s.say = { text: m.reply.text, left: SAY_TICKS }; s.reply = null; }
   }
-  return out;
+  if (m.mode === "walk") {
+    const dx = m.tx - m.x, d = Math.abs(dx);
+    if (d <= stage.speed) return { ...s, x: m.tx, lane: m.tl, mode: "rest", left: between(rng, stage.pauseMin, stage.pauseMax) };
+    return { ...s, x: m.x + Math.sign(dx) * stage.speed, lane: m.lane + (m.tl - m.lane) * (stage.speed / d) };
+  }
+  if (m.left > 1 || s.say || s.reply) return { ...s, left: Math.max(1, m.left - 1) };
+  // rest is over: pick somewhere at least a quarter of the stage away, behind or in front of the tree
+  let tx = between(rng, -stage.rx, stage.rx);
+  if (Math.abs(tx - m.x) < stage.rx / 4) tx = m.x > 0 ? -stage.rx / 2 : stage.rx / 2;
+  return { ...s, mode: "walk", tx, tl: rng() < 0.5 ? -1 : 1 };
 }
 
-// Slow walk around the tree: each member circles an ellipse, evenly spaced. front = on the viewer's side
-// (drawn over the tree), otherwise behind it. Returns the point on the ground in px, relative to the centre.
-export function crewPos(tick, c, n, orbit) {
-  const a = ((tick / orbit.periodTicks) + c / n) * 2 * Math.PI;
-  return { x: orbit.rx * Math.cos(a), y: orbit.ry * Math.sin(a), front: Math.sin(a) >= 0 };
+// Advance every member one tick; two members resting near each other may start a chat.
+export function crewTick(crew, rng, stage, lines) {
+  const next = crew.map((m) => step(m, rng, stage));
+  for (let i = 0; i < next.length; i++) for (let j = i + 1; j < next.length; j++) {
+    const a = next[i], b = next[j];
+    const free = (m) => m.mode === "rest" && !m.say && !m.reply;
+    if (!free(a) || !free(b) || Math.abs(a.x - b.x) > stage.talkRange || rng() > 0.35) continue;
+    const l1 = between(rng, 0, lines.length - 1);
+    const l2 = (l1 + 1 + between(rng, 0, lines.length - 2)) % lines.length;
+    const hold = SAY_TICKS * 2 + 2;
+    next[i] = { ...a, say: { text: lines[l1], left: SAY_TICKS }, left: Math.max(a.left, hold) };
+    next[j] = { ...b, reply: { text: lines[l2], delay: SAY_TICKS }, left: Math.max(b.left, hold) };
+  }
+  return next;
 }
