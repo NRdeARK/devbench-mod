@@ -40,10 +40,12 @@ function tabRows(w) {
   const rows = [];
   for (const c of w.tabs ?? []) {
     const own = AGENTS.filter((a) => a.tab === c.id);
-    if (own.length) const state = tabState(own);
+    if (own.length) {
+    const state = tabState(own);
     // Logo of the agent that decides the state (first match), else the first agent.
     const lead = own.find((a) => a.status === state) ?? own[0];
     rows.push({ id: c.id, name: c.name, state, program: lead.program });
+    }
   }
   return rows;
 }
