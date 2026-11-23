@@ -505,13 +505,7 @@ export const SPRITES = {
       }
     ]
   },
-  "sheep-a": {
-    "scale": 2,
-    "cols": 42,
-    "rows": 18,
-    "lights": []
-  },
-  "sheep-b": {
+  "sheep": {
     "scale": 2,
     "cols": 42,
     "rows": 18,

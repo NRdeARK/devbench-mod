@@ -85,10 +85,9 @@ export const CREW = {
   lines: ["nice tree!", "ho ho ho", "more lights?", "ship it!", "tests green", "cocoa break", "so sparkly", "need review?", "merry xmas", "brb"],
 };
 
-// The brand mark: a sheep pulling a sledge (the Herdr ram, in costume), two trot frames. Sprites sheep-a/-b.px, 2x.
+// The brand mark: the Herdr ram as a sheep pulling a sledge (theme/sprites/sheep.px, 2x). It stands still.
 export const BRAND = {
-  frames: ["mods/devbench-brand/sheep-a.svg", "mods/devbench-brand/sheep-b.svg"],
-  w: SPRITES["sheep-a"].cols * SPRITES["sheep-a"].scale,
-  h: SPRITES["sheep-a"].rows * SPRITES["sheep-a"].scale,
-  trotMs: 280,
+  svg: "mods/devbench-brand/sheep.svg",
+  w: SPRITES.sheep.cols * SPRITES.sheep.scale,
+  h: SPRITES.sheep.rows * SPRITES.sheep.scale,
 };

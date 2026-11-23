@@ -1,15 +1,10 @@
 import { View, div, image, svg } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { flip, drift } from "./effects.js";
 import { BRAND } from "./christmas.js";
 import { theme, run, props, window, shared, setShared, updates, layout } from "herdr";
 
-// The brand sheep: two trot frames crossfade while the whole team bobs, so it looks like it is pulling the sledge.
-function sheep() {
-  const frame = (src) => image(src).absolute().left(0).top(0).w(BRAND.w).h(BRAND.h);
-  const [a, b] = BRAND.frames;
-  return drift(div().relative().w(BRAND.w).h(BRAND.h).flex_none().children(flip(frame(a), frame(b), BRAND.trotMs)), 0, 0, 1);
-}
+// The brand sheep: a still picture (see theme/sprites/sheep.px).
+const sheep = () => image(BRAND.svg).w(BRAND.w).h(BRAND.h).flex_none();
 
 function find(node, id) {
   if (node?.id === id) return node;
