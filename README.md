@@ -3,7 +3,7 @@
 A Christmas theme and a flat, agent-list-free sidebar for the Herdr app, built as a layout plus a few mods. Tokyo Night colours on black.
 
 ## What you get
-- **Flat sidebar.** No agent list and no worktree nesting. Every tab that holds an agent is listed under its space by tab name, with the agent's logo in front and its state at the back. A tab is `done` only when **all** its agents are done. `agent.prev` / `agent.next` walk the tab rows; bind them in `keys.json` (I use `"alt-q"` and `"alt-w"`).
+- **Flat sidebar.** No agent list and no worktree nesting. Every tab that holds an agent is listed under its space by tab name, with the agent's logo in front and its state at the back. A tab is `done` only when **all** its agents are done. The keys walk the tab rows top to bottom and wrap round, skipping folded spaces. Bind them in `keys.json`: `"alt-w": "devbench-spaces.next"`, `"alt-q": "devbench-spaces.prev"` (Herdr's own `agent.next` / `agent.prev` follow an internal history instead).
 - **Decorated panes.** The header is tinted by agent state, with a rounded accent strip, a logo, a "Needs you" chip when blocked, and a string of lights on the focused pane.
 - **Christmas decoration.**
   - A pixel-art light string across the top of the sidebar; each bulb blinks.

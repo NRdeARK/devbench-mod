@@ -8,7 +8,7 @@ import { tabRows as rowsOf, spaceState, navOrder } from "./core.js";
 import { smooth, marker } from "./effects.js";
 import { GLYPHS, WORKING_FRAMES, SPACE_DOT, hatFor, HATS, ROW_RADIUS } from "./christmas.js";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
-import { spaces, agents, setAgentOrder, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
+import { spaces, agents, setAgentOrder, nextCommand, focused, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -76,6 +76,13 @@ export function tone(t, status) {
 
 export default class Spaces extends View {
   init(_props, cx) {
+    // Keys: "devbench-spaces.next" / ".prev" walk the tab rows exactly as the sidebar shows them (top to bottom).
+    cx.spawn(async (cx) => {
+      for (;;) {
+        const cmd = await nextCommand();
+        if (cmd === "next" || cmd === "prev") { this.walk(cmd === "next" ? 1 : -1); cx.notify(); }
+      }
+    });
     this.git = {}; // where() -> { name, branch, ahead, behind, repo, linked }, null: not a repo
     this.checked = {}; // where() -> when it was last looked at
     this.unsure = new Set(); // where()s git couldn't answer for (a machine away)
@@ -453,6 +460,17 @@ export default class Spaces extends View {
       .when(Boolean(where), (el) => el.child(div().min_w(0).truncate().child(where)))
       .when(g.ahead > 0, (el) => el.child(div().flex_none().text_color(t.ansi2).child(`\u2191${g.ahead}`)))
       .when(g.behind > 0, (el) => el.child(div().flex_none().text_color(t.ansi1).child(`\u2193${g.behind}`)));
+  }
+
+  // Step to the next / previous visible tab row (folded spaces are skipped), wrapping round.
+  walk(dir) {
+    AGENTS = agents();
+    const order = spaces().flatMap((w) => this.shut.has(w.id) ? [] : tabRows(w).map((r) => ({ space: w.id, tab: r.id })));
+    if (!order.length) return;
+    const at = order.findIndex((r) => r.tab === focused()?.tab);
+    const to = at < 0 ? (dir > 0 ? 0 : order.length - 1) : (at + dir + order.length) % order.length;
+    run("space.select", { id: order[to].space });
+    run("tab.select", { id: order[to].tab });
   }
 
   row({ w, i, g, tree }, t) {
