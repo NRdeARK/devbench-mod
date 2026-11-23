@@ -1,9 +1,10 @@
 // Tree: a pixel-art Christmas tree with blinking lights. Composes effects and theme only.
 import { View, div, image, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { layout } from "herdr";
-import { twinkle, pulse, sway } from "./effects.js";
-import { TREE, BAUBLES } from "./christmas.js";
+import { layout, spaces, agents, run, theme } from "herdr";
+import { roster } from "./core.js";
+import { twinkle, pulse, flip } from "./effects.js";
+import { TREE, ELF, ELF_DIM, elfVariant } from "./christmas.js";
 
 function find(node, id) {
   if (!node) return null;
@@ -13,6 +14,34 @@ function find(node, id) {
 }
 
 export default class Tree extends View {
+  // One elf for one agent tab: working elves flip between two frames, a blocked elf waves and blinks "!".
+  elf(e, i, t) {
+    const w = ELF.cols * ELF.scale, h = ELF.rows * ELF.scale;
+    const variant = elfVariant(e);
+    const names = ELF.frames[e.state] ?? ELF.frames.idle;
+    const img = (f) => image(ELF.svg(f, variant)).absolute().left(0).top(0).w(w).h(h);
+    const layers = names.length > 1 ? flip(img(names[0]), img(names[1]), ELF.flipMs) : [img(names[0])];
+    const bubble = e.state === "blocked"
+      ? [pulse(div().absolute().left(w / 2 + 8).top(-17).text_size(13).font_bold().text_color(t.blocked).child(ELF.alert), 700, 0.1)]
+      : [];
+    const color = t[e.state] ?? t.muted;
+    const p = e.program;
+    const badge = p?.icon
+      ? div().absolute().left(w / 2 - 7).top(-17).size(14).rounded(99).bg("#16161ecc").border_1().border_color(color).overflow_hidden().items_center().justify_center()
+          .child(p.tint ? svg(p.icon).size(9).text_color(t.foreground) : image(p.icon).w(9).h(9))
+      : div();
+    return div()
+      .id(`elf-${e.id}`)
+      .opacity(ELF_DIM[e.state] ?? 1)
+      .relative()
+      .w(w)
+      .h(h)
+      .flex_none()
+      .tooltip(`${e.spaceName}: ${e.name}`)
+      .on_click(() => { run("space.select", { id: e.space }); run("tab.select", { id: e.id }); })
+      .children([...layers, badge, ...bubble]);
+  }
+
   render() {
     // On the narrow rail there is no room for a tree.
     if ((find(layout(), "sidebar")?.size?.px ?? Infinity) < 160) return div();
@@ -20,22 +49,13 @@ export default class Tree extends View {
     const w = TREE.cols * px, h = TREE.rows * px;
     const pixel = (id, x, y, color) => div().id(id).absolute().left(x * px).top(y * px).size(px).bg(color);
     const balls = TREE.ornaments.map((o, i) => twinkle(pixel(`orn-${i}`, o.x, o.y, o.c), i));
-    // An agent logo on a string: sways on its branch, with a soft glow that breathes.
-    const bauble = (b, i) => {
-      const half = b.size / 2;
-      const inner = b.size - 8;
-      const logo = b.tint ? svg(b.icon).size(inner).text_color(b.tint) : image(b.icon).w(inner).h(inner);
-      const glow = pulse(div().absolute().left(-3).top(-3).size(b.size + 6).rounded(99).bg("#e0af6833"), 900 + i * 300, 0.2);
-      const hung = div().absolute().top(b.y).w(b.size).h(b.size + 8).flex_none().tooltip("hangs on the tree")
-        .child(div().absolute().left(half).top(0).w(1).h(8).bg("#565f89"))
-        .child(div().absolute().top(8).left(0).size(b.size).child(glow)
-          .child(div().absolute().left(0).top(0).size(b.size).flex().rounded(99).overflow_hidden().bg("#16161ecc").border_1().border_color("#e0af68").items_center().justify_center().child(logo)));
-      return sway(hung, i, b.x - half);
-    };
-    return h_flex().size_full().justify_center().items_end().pb(6).child(
+    return div().relative().size_full().child(h_flex().size_full().justify_center().items_end().pb(6).child(
       div().relative().w(w).h(h).flex_none()
         .child(image(TREE.svg).w(w).h(h))
-        .children(balls)
-        .children(BAUBLES.map(bauble)));
+        .children(balls)))
+      // the elves stand on the snow at the foot of the tree, one per agent tab, showing its real state
+      .child(h_flex().absolute().left(0).right(0).bottom(8).justify_center().items_end().gap(2)
+        .children(elves)
+        .when(more > 0, (el) => el.child(div().text_size(10).text_color(t.muted).child(`+${more}`))));
   }
 }
