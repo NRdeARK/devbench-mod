@@ -67,3 +67,11 @@ export function bulbs(lights) {
   }
   return out;
 }
+
+// The agents' own logos hang on the tree as baubles. x/y are screen px inside the tree box
+// (the bauble's top-centre, where its string is tied); tint means a one-colour glyph.
+export const BAUBLES = [
+  { icon: "icons/claude.svg", tint: "#d97757", x: 44, y: 62, size: 20 },
+  { icon: "icons/antigravity.svg", x: 98, y: 92, size: 20 },
+  { icon: "icons/codex.svg", x: 40, y: 118, size: 20 },
+];

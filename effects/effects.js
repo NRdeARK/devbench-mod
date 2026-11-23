@@ -31,3 +31,7 @@ export const twinkle = (el, i = 0, low = 0.05) =>
 // Bob a flake up and down by a few pixels, each on its own period.
 export const drift = (el, i = 0, from = 0, to = 6) =>
   FX.enabled ? el.loop("top", { from, to, period: 1800 + ((i * 421) % 1800), easing: "ease-in-out" }) : el;
+
+// Sway sideways like something hanging from a branch; each on its own period.
+export const sway = (el, i = 0, x = 0, amount = 3) =>
+  FX.enabled ? el.loop("left", { from: x - amount, to: x + amount, period: 1600 + ((i * 377) % 900), easing: "ease-in-out" }) : el.left(x);
