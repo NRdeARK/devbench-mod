@@ -101,3 +101,6 @@ export function snowTick(flakes, w, h, rng) {
     return { ...f, y, x: Math.min(w, Math.max(0, f.x + (rng() - 0.5) * 6)) };
   });
 }
+
+// Rows a space shows: all of them, or when folded only those that need a look (blocked, or done).
+export const shown = (rows, folded) => (folded ? rows.filter((r) => r.state === "blocked" || r.state === "done") : rows);

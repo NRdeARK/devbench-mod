@@ -4,7 +4,7 @@
 // switch, right-click for its menu, drag to reorder.
 
 import { View, div, image, svg } from "gpui-kit";
-import { tabRows as rowsOf, spaceState, navOrder } from "./core.js";
+import { tabRows as rowsOf, spaceState, navOrder, shown } from "./core.js";
 import { smooth, marker } from "./effects.js";
 import { GLYPHS, WORKING_FRAMES, SPACE_DOT, hatFor, HATS, ROW_RADIUS } from "./christmas.js";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
@@ -37,7 +37,7 @@ function logo(p, size, color) {
   return p.tint ? svg(p.icon).size(size).flex_none().text_color(color) : image(p.icon).w(size).h(size).flex_none();
 }
 const GAP = 10; // space between spaces
-const rowHeight = (w, shut) => 30 + (shut ? 0 : tabRows(w).length * ATTN_H);
+const rowHeight = (w, shut) => 30 + shown(tabRows(w), shut).length * ATTN_H;
 const RAIL_CELL = 32;
 // A space's name and its git tail never shrink below this, so a short one ("api")
 // stays readable instead of turning into an ellipsis next to a long branch.
@@ -107,6 +107,7 @@ export default class Spaces extends View {
     } catch { this.reconnecting = {}; }
     // spaces whose agent rows are folded away (the chevron on the space row), kept across restarts
     try { this.shut = new Set(JSON.parse(localStorage.getItem("devbench.spaces.shut") ?? "[]")); } catch { this.shut = new Set(); }
+    this.auto = new Set(); // spaces unfolded by focus (not by the button): they fold again when focus leaves
     try { this.folded = new Set(JSON.parse(localStorage.getItem("machines.folded") ?? "[]")); } catch { this.folded = new Set(); }
     this.refreshMachines(cx);
     cx.timer.every(15000, cx => this.refreshMachines(cx));
@@ -465,7 +466,7 @@ export default class Spaces extends View {
   // Step to the next / previous visible tab row (folded spaces are skipped), wrapping round.
   walk(dir) {
     AGENTS = agents();
-    const order = spaces().flatMap((w) => this.shut.has(w.id) ? [] : tabRows(w).map((r) => ({ space: w.id, tab: r.id })));
+    const order = spaces().flatMap((w) => shown(tabRows(w), this.shut.has(w.id)).map((r) => ({ space: w.id, tab: r.id })));
     if (!order.length) return;
     const at = order.findIndex((r) => r.tab === focused()?.tab);
     const to = at < 0 ? (dir > 0 ? 0 : order.length - 1) : (at + dir + order.length) % order.length;
@@ -477,6 +478,8 @@ export default class Spaces extends View {
     const on = w.active;
     const rows = tabRows(w);
     const shut = this.shut.has(w.id) && rows.length > 0;
+    const visible = shown(rows, shut);
+    const hidden = rows.length - visible.length;
     const here = focused()?.tab; // the tab that has the keyboard: its row is marked
     const fromIndex = this.pressed === null ? -1 : spaces().findIndex(s => s.id === this.pressed);
     return v_flex()
@@ -528,7 +531,7 @@ export default class Spaces extends View {
           .child(h_flex().size(18).flex_none().items_center().justify_center().text_color(tone(t, spaceState(tabRows(w)))).child(SPACE_DOT[spaceState(tabRows(w))] ?? ""))
           .child(div().flex_1().min_w(SIDE_MIN).truncate().font_semibold().text_color(t.foreground).child(w.name))
           // how many agent tabs are hidden, and the button that folds / unfolds them
-          .when(shut, (el) => el.child(div().flex_none().text_size(11).text_color(t.dim).child(`${rows.length}`)))
+          .when(shut, (el) => hidden > 0 ? el.child(div().flex_none().text_size(11).text_color(t.dim).child(`+${hidden}`)) : el)
           .when(rows.length > 0, (el) => el.child(
             h_flex().id(`fold-${w.id}`).size(22).flex_none().items_center().justify_center().rounded(5)
               .hover((b) => b.bg(t.hover))
@@ -537,12 +540,13 @@ export default class Spaces extends View {
               .on_click((_e, cx) => {
                 cx.stop_propagation();
                 if (this.shut.has(w.id)) this.shut.delete(w.id); else this.shut.add(w.id);
+                this.auto.delete(w.id);
                 localStorage.setItem("devbench.spaces.shut", JSON.stringify([...this.shut]));
                 cx.notify();
               })
               .child(svg(`mods/workspace-chrome/chevron-${shut ? "right" : "down"}.svg`).size(11).text_color(t.dim)))),
       )
-      .children((shut ? [] : rows).map((c) => h_flex()
+      .children(visible.map((c) => h_flex()
         .id(`attn-${c.id}`)
         .h(ATTN_H)
         .pl(27)
@@ -579,12 +583,14 @@ export default class Spaces extends View {
 
   render() {
     AGENTS = agents();
-    // Follow the focus: if it moved into a folded space, unfold it so the focused row is never hidden.
+    // Follow the focus: a folded space unfolds while focus is inside it and folds again when focus leaves.
     const here = focused()?.tab;
     if (here && here !== this.lastFocus) {
       this.lastFocus = here;
-      const w = spaces().find((s) => tabRows(s).some((r) => r.id === here));
-      if (w && this.shut.delete(w.id)) localStorage.setItem("devbench.spaces.shut", JSON.stringify([...this.shut]));
+      const inside = spaces().find((s) => tabRows(s).some((r) => r.id === here))?.id;
+      for (const id of [...this.auto]) if (id !== inside) { this.auto.delete(id); this.shut.add(id); }
+      if (inside && this.shut.delete(inside)) this.auto.add(inside);
+      localStorage.setItem("devbench.spaces.shut", JSON.stringify([...this.shut]));
     }
     // agent.next / agent.prev (alt-down / alt-up) follow the list as drawn: one stop per tab row.
     setAgentOrder(navOrder(spaces(), AGENTS));

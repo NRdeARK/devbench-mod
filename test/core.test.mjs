@@ -39,3 +39,9 @@ let snow = makeSnow(18, 268, 184, rng);
 for (let i = 0; i < 500; i++) snow = snowTick(snow, 268, 184, rng);
 assert.ok(snow.every((f) => f.y >= -3 && f.y <= 184 && f.x >= 0 && f.x <= 268) && snow.some((f) => f.gen > 0), "snow stays in the box and restarts at the top");
 console.log("snow tests passed");
+
+import { shown } from "../core/core.js";
+const rs = [{ state: "working" }, { state: "blocked" }, { state: "idle" }, { state: "done" }];
+assert.equal(shown(rs, false).length, 4, "unfolded shows every row");
+assert.deepEqual(shown(rs, true).map((r) => r.state), ["blocked", "done"], "folded still shows what needs a look");
+console.log("shown tests passed");
