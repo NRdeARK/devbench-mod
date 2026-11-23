@@ -98,8 +98,8 @@
               "content": {
                 "tab": "active",
                 "pane": {
-                  "gap": 8,
-                  "radius": 10,
+                  "gap": 10,
+                  "radius": 12,
                   "background": "background",
                   "lone": true,
                   "border": {
@@ -107,14 +107,14 @@
                     "color": "border"
                   },
                   "focus": {
-                    "width": 1,
+                    "width": 2,
                     "color": "accent"
                   },
                   "header": {
                     "content": {
-                      "mod": "pane"
+                      "mod": "devbench-pane"
                     },
-                    "height": 30,
+                    "height": 34,
                     "position": "top",
                     "reveal": "always"
                   }
