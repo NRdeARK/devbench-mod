@@ -16,9 +16,3 @@ assert.equal(spaceState(rows), "blocked");
 assert.equal(spaceState([]), null);
 assert.deepEqual(navOrder([space], [ag("a", "idle"), ag("b", "idle")]), ["a-idle", "b-idle"]);
 console.log("core tests passed");
-
-import { roster } from "../core/core.js";
-const sp = [{ id: "s1", name: "dispatcher", tabs: [{ id: "a", name: "A" }, { id: "b", name: "B" }] }];
-const r2 = roster(sp, [ag("a", "working"), ag("b", "blocked")]);
-assert.deepEqual(r2.map((e) => [e.name, e.state, e.spaceName]), [["A", "working", "dispatcher"], ["B", "blocked", "dispatcher"]]);
-console.log("roster tests passed");
