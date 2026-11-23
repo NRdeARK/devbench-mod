@@ -3,7 +3,7 @@
 // its first terminal is in now, only where unusual: branch, ahead/behind. Agent state lives in the agents list, not here. Click to
 // switch, right-click for its menu, drag to reorder.
 
-import { View, div, svg } from "gpui-kit";
+import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
 import { spaces, agents, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
 
@@ -40,9 +40,19 @@ function tabRows(w) {
   const rows = [];
   for (const c of w.tabs ?? []) {
     const own = AGENTS.filter((a) => a.tab === c.id);
-    if (own.length) rows.push({ id: c.id, name: c.name, state: tabState(own) });
+    if (own.length) const state = tabState(own);
+    // Logo of the agent that decides the state (first match), else the first agent.
+    const lead = own.find((a) => a.status === state) ?? own[0];
+    rows.push({ id: c.id, name: c.name, state, program: lead.program });
   }
   return rows;
+}
+// Tab-row marker at the row's end: a shape per state, not only a color.
+const MARKER = { blocked: "!", working: "◐", done: "✓", idle: "·" };
+// The agent's icon from the app's program table: a one-color glyph or a picture.
+function logo(p, size, color) {
+  if (!p?.icon) return h_flex().size(size).flex_none();
+  return p.tint ? svg(p.icon).size(size).flex_none().text_color(color) : image(p.icon).w(size).h(size).flex_none();
 }
 const spaceState = (rows) => URGENCY.find((st) => rows.some((r) => r.state === st)) ?? null;
 const rowHeight = (w) => 30 + tabRows(w).length * ATTN_H;
@@ -521,8 +531,11 @@ export default class Spaces extends View {
         .hover((el) => el.bg(t.hover))
         .on_mouse_down("left", () => { this.pressed = null; })
         .on_mouse_up("left", () => { run("space.select", { id: w.id }); run("tab.select", { id: c.id }); })
-        .child(h_flex().size(14).flex_none().items_center().justify_center().text_color(tone(t, c.state)).child(glyph(c.state)))
-        .child(div().min_w(0).truncate().child(c.name))));
+        .gap(6)
+        .pr(10)
+        .child(logo(c.program, 14, t.foreground))
+        .child(div().flex_1().min_w(0).truncate().child(c.name))
+        .child(div().flex_none().text_color(tone(t, c.state)).child(MARKER[c.state]))));
   }
 
   compact({ w, i }, t) {
