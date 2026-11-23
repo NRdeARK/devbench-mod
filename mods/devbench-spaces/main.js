@@ -44,7 +44,7 @@ function tabRows(w) {
     const state = tabState(own);
     // Logo of the agent that decides the state (first match), else the first agent.
     const lead = own.find((a) => a.status === state) ?? own[0];
-    rows.push({ id: c.id, name: c.name, state, program: lead.program });
+    rows.push({ id: c.id, name: c.name, state, program: lead.program, address: lead.address });
     }
   }
   return rows;
@@ -560,8 +560,8 @@ export default class Spaces extends View {
 
   render() {
     AGENTS = agents();
-    // agent.next / agent.prev (alt-down / alt-up) follow the list as drawn: space, then tab, then agent.
-    setAgentOrder(spaces().flatMap((w) => (w.tabs ?? []).flatMap((c) => AGENTS.filter((a) => a.tab === c.id).map((a) => a.address))));
+    // agent.next / agent.prev (alt-down / alt-up) follow the list as drawn: one stop per tab row.
+    setAgentOrder(spaces().flatMap((w) => tabRows(w).map((r) => r.address)));
     const t = theme();
     const collapsed = narrow();
     const palette = ["ansi6", "ansi3", "ansi4", "ansi5", "ansi2", "ansi1"];
