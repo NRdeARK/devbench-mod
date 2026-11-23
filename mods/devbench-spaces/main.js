@@ -28,7 +28,7 @@ function place(s, ps) {
   const tabs = new Set((s.tabs ?? []).map((c) => c.id));
   return ps.find((p) => tabs.has(p.tab) && p.cwd)?.cwd || s.folder;
 }
-const ATTN_H = 20;
+const ATTN_H = 26;
 let AGENTS = []; // agents(), read once per render
 const tabRows = (w) => rowsOf(w, AGENTS); // state logic lives in core.js
 // The agent's icon from the app's program table: a one-color glyph or a picture.
@@ -517,7 +517,7 @@ export default class Spaces extends View {
         .on_mouse_up("left", () => { run("space.select", { id: w.id }); run("tab.select", { id: c.id }); })
         .gap(6)
         .pr(10)
-        .child(div().relative().size(14).flex_none().child(logo(c.program, 14, t.foreground)).child(image(hatFor(w.name, c.name)).absolute().top(-5).left(-3).w(10).h(10)))
+        .child(div().relative().size(18).flex_none().child(logo(c.program, 18, t.foreground)).child(image(hatFor(w.name, c.name)).absolute().top(-4).left(4).w(11).h(11)))
         .child(div().flex_1().min_w(0).truncate().child(c.name))
         .child(marker(div().flex_none().text_color(tone(t, c.state)), c.state, GLYPHS, WORKING_FRAMES))));
   }

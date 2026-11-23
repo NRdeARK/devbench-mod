@@ -22,3 +22,11 @@ export function marker(el, state, glyphs, frames) {
   el = el.child(glyphs[state] ?? "");
   return state === "blocked" ? pulse(el) : el;
 }
+
+// A light that twinkles on its own rhythm: pass its index so neighbours drift out of step.
+export const twinkle = (el, i = 0, low = 0.25) =>
+  FX.enabled ? el.loop("opacity", { from: 1, to: low, period: 900 + ((i * 337) % 900), easing: "ease-in-out" }) : el;
+
+// Drift a flake up and down slowly (top in px), each on its own period.
+export const drift = (el, i = 0, from = 0, to = 6) =>
+  FX.enabled ? el.loop("top", { from, to, period: 2200 + ((i * 421) % 1800), easing: "ease-in-out" }) : el;

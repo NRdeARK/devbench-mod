@@ -6,7 +6,13 @@
     12,
     16
   ],
-  "background": "canvas",
+  "background": {
+    "gradient": [
+      "#0e2c1f",
+      "#1d1014"
+    ],
+    "angle": 160
+  },
   "terminal_padding": [
     14,
     12
@@ -24,9 +30,26 @@
       },
       "min": 44,
       "max": 480,
-      "background": "chrome",
+      "background": {
+        "gradient": [
+          "#17402d",
+          "#0f2a1d"
+        ],
+        "angle": 180
+      },
       "resizable": false,
       "children": [
+        {
+          "id": "garland",
+          "type": "block",
+          "size": {
+            "px": 34
+          },
+          "window_drag": true,
+          "content": {
+            "mod": "devbench-garland"
+          }
+        },
         {
           "id": "brand",
           "type": "block",
@@ -104,11 +127,11 @@
                   "lone": true,
                   "border": {
                     "width": 1,
-                    "color": "border"
+                    "color": "#2f6b4a"
                   },
                   "focus": {
                     "width": 2,
-                    "color": "accent"
+                    "color": "#f4c95d"
                   },
                   "header": {
                     "content": {

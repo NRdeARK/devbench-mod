@@ -15,3 +15,7 @@ export const BLOCKED_CHIP = "Needs you 🎁";
 export const HATS = { santa: "mods/devbench-spaces/santa.svg", elf: "mods/devbench-spaces/elf.svg" };
 export const hatFor = (spaceName, tabName) =>
   spaceName === "dispatcher" || tabName === "dispatcher" ? HATS.santa : HATS.elf;
+
+// Bulb colors (cycled along the light string) and flake glyphs.
+export const LIGHT_COLORS = ["#ff4d5e", "#f4c95d", "#5be37d", "#6fb7ff"];
+export const FLAKES = ["❄", "❅", "❆"];

@@ -5,7 +5,8 @@
 set -eu
 home="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"; here="$(cd "$(dirname "$0")" && pwd)"; dry=${1:-}
 run() { echo "+ $*"; [ "$dry" = --dry-run ] || "$@"; }
-for mod in devbench-spaces devbench-pane; do
+(cd "$here" && node build.mjs)
+for mod in devbench-spaces devbench-pane devbench-garland; do
   run mkdir -p "$home/mods/$mod"
   run cp "$here/mods/$mod/main.js" "$here/mods/$mod/mod.json" "$home/mods/$mod/"
   run cp "$here/core/core.js" "$here/effects/effects.js" "$here"/theme/*.js "$home/mods/$mod/"
