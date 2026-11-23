@@ -10,4 +10,5 @@ Derived from Herdr's shipped mod; re-clone to pick up upstream changes.
 - `core/`: pure state logic (tab state, rows, nav order). Tested: `node test/core.test.mjs`.
 - `effects/`: motion helpers (smooth height/opacity, pulse, glyph-frame cycling). `FX.enabled=false` turns motion off.
 - `theme/`: Christmas look: `christmas.json` (Herdr theme), `christmas.js` (glyphs, working snowflake frames, hat rule), `santa.svg` / `elf.svg`. Dispatcher gets the Santa hat, every other agent an elf hat.
+- `mods/devbench-tree`, `mods/devbench-garland`: decoration blocks in the sidebar (tree with twinkling ornaments and a pulsing star; light string with snowflakes).
 - Mods (`mods/*`) only compose the three. `install.sh` copies each layer's files next to the mods and `theme/*.json` into `themes/`.

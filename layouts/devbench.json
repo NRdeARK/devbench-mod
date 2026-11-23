@@ -75,6 +75,16 @@
               "content": {
                 "mod": "devbench-spaces"
               }
+            },
+            {
+              "id": "tree",
+              "type": "block",
+              "size": {
+                "px": 165
+              },
+              "content": {
+                "mod": "devbench-tree"
+              }
             }
           ]
         },
