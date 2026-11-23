@@ -57,6 +57,7 @@ function logo(p, size, color) {
   return p.tint ? svg(p.icon).size(size).flex_none().text_color(color) : image(p.icon).w(size).h(size).flex_none();
 }
 const spaceState = (rows) => URGENCY.find((st) => rows.some((r) => r.state === st)) ?? null;
+const GAP = 10; // space between spaces
 const rowHeight = (w) => 30 + tabRows(w).length * ATTN_H;
 const RAIL_CELL = 32;
 // A space's name and its git tail never shrink below this, so a short one ("api")
@@ -481,6 +482,7 @@ export default class Spaces extends View {
       .id(`space-${w.id}`)
       .px(8)
       .h(rowHeight(w))
+      .mb(GAP)
       .flex_none()
       .justify_center()
       .rounded(8)
@@ -521,7 +523,7 @@ export default class Spaces extends View {
           .gap(9)
           .items_center()
           .child(h_flex().size(18).flex_none().items_center().justify_center().text_color(tone(t, spaceState(tabRows(w)))).child(glyph(spaceState(tabRows(w)))))
-          .child(div().flex_1().min_w(SIDE_MIN).truncate().text_color(t.foreground).child(w.name)),
+          .child(div().flex_1().min_w(SIDE_MIN).truncate().font_semibold().text_color(t.foreground).child(w.name)),
       )
       .children(tabRows(w).map((c) => h_flex()
         .id(`attn-${c.id}`)
