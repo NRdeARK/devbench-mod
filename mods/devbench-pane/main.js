@@ -84,6 +84,9 @@ export default class Pane extends View {
       .gap(8)
       .items_center()
       .relative()
+      .overflow_hidden()
+      .when(!bottom, el => el.rounded_t(10))
+      .when(bottom, el => el.rounded_b(10))
       .bg(t.background)
       .when(Boolean(tint), el => el.bg(tint))
       .when(bottom, el => el.border_t(1))
@@ -92,10 +95,10 @@ export default class Pane extends View {
       .text_size(12)
       .on_hover((hovered, cx) => { this.hovered = hovered; cx.notify(); })
       .on_click(() => run("pane.focus", { pane }))
-      .child(strip(div().absolute().left(0).top(0).bottom(0).w(3).bg(sc ?? (p.focused ? t.accent : t.border)), st))
+      .child(strip(div().absolute().left(5).top(7).bottom(7).w(3).rounded(2).bg(sc ?? (p.focused ? t.accent : t.border)), st))
       // light string along the top edge, only on the focused pane
       .when(Boolean(p.focused), el => el.child(
-        h_flex().absolute().left(14).right(14).top(0).justify_between()
+        h_flex().absolute().left(18).right(18).top(3).justify_between()
           .children(Array.from({ length: 14 }, (_v, i) => twinkle(div().id(`lt-${pane}-${i}`).w(5).h(3).rounded(2).bg(LIGHT_COLORS[i % LIGHT_COLORS.length]), i)))))
       .when(Boolean(pic), (el) => el.child(pic))
       .child(div().flex_none().truncate().max_w(260).font_medium().text_color(t.foreground).child(name))
