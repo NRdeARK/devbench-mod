@@ -1,6 +1,8 @@
 // THEME: how it looks, 8-bit Christmas. Data only: glyphs, sprite paths, palette, geometry.
 // No motion (effects/) and no state rules (core/).
 
+import { SPRITES } from "./sprites.meta.js";
+
 export const THEME_NAME = "christmas";
 
 // Corner radii: sidebar rows and pane headers keep their soft corners. Only the tree and bulbs are pixel art.
@@ -24,22 +26,18 @@ export const hatFor = (spaceName, tabName) =>
   spaceName === "dispatcher" || tabName === "dispatcher" ? HATS.santa : HATS.elf;
 
 // Bulb colours, cycled along the light strings.
-export const LIGHT_COLORS = ["#ff4d5e", "#f4c95d", "#34d97a", "#4aa8ff"];
+export const LIGHT_COLORS = ["#f7768e", "#e0af68", "#9ece6a", "#7aa2f7"]; // Tokyo Night red, yellow, green, blue
 
 // Snowflake glyphs drifting under the garland.
 export const FLAKES = ["\u2744", "\u2745", "\u2746"];
 
-// Tree sprite is 21x27 pixels at 5x: 105x135. Ornaments are pixel coordinates inside the sprite.
+// The tree sprite is theme/sprites/tree.px, built to an SVG. Its size and its string lights
+// (palette keys 1-4 in the .px) come from the generated sprites.meta.js.
 export const TREE = {
   svg: "mods/devbench-tree/tree.svg",
-  px: 5,
-  cols: 21,
-  rows: 27,
-  ornaments: [
-    { x: 10, y: 8, c: "#ff4d5e" }, { x: 8, y: 11, c: "#f4c95d" }, { x: 12, y: 12, c: "#4aa8ff" },
-    { x: 6, y: 14, c: "#ff4d5e" }, { x: 10, y: 16, c: "#ffffff" }, { x: 14, y: 18, c: "#f4c95d" },
-    { x: 5, y: 20, c: "#4aa8ff" }, { x: 11, y: 20, c: "#ff4d5e" }, { x: 16, y: 21, c: "#ffffff" },
-  ],
-  // White sparkles around the star.
-  sparkles: [{ x: 6, y: 2 }, { x: 15, y: 1 }, { x: 8, y: 0 }],
+  px: SPRITES.tree.scale,
+  cols: SPRITES.tree.cols,
+  rows: SPRITES.tree.rows,
+  ornaments: SPRITES.tree.lights, // { x, y, c } in sprite pixels: each gets a blinking overlay
+  sparkles: [],
 };

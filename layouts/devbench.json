@@ -6,13 +6,7 @@
     12,
     16
   ],
-  "background": {
-    "gradient": [
-      "#0e2c1f",
-      "#1d1014"
-    ],
-    "angle": 160
-  },
+  "background": "#16161e",
   "terminal_padding": [
     14,
     12
@@ -30,13 +24,7 @@
       },
       "min": 44,
       "max": 480,
-      "background": {
-        "gradient": [
-          "#17402d",
-          "#0f2a1d"
-        ],
-        "angle": 180
-      },
+      "background": "#16161e",
       "resizable": false,
       "children": [
         {
@@ -80,7 +68,7 @@
               "id": "tree",
               "type": "block",
               "size": {
-                "px": 165
+                "px": 190
               },
               "content": {
                 "mod": "devbench-tree"
@@ -137,11 +125,11 @@
                   "lone": true,
                   "border": {
                     "width": 1,
-                    "color": "#2f6b4a"
+                    "color": "#292e42"
                   },
                   "focus": {
                     "width": 2,
-                    "color": "#f4c95d"
+                    "color": "#e0af68"
                   },
                   "header": {
                     "content": {

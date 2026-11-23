@@ -1,9 +1,23 @@
 {
-  "root": { "background": { "gradient": ["#0e2c1f", "#1d1014"], "angle": 160 } },
-  "sidebar": { "background": { "gradient": ["#17402d", "#0f2a1d"], "angle": 180 } },
-  "main": { "content": { "pane": {
-    "background": "background",
-    "border": { "width": 1, "color": "#2f6b4a" },
-    "focus": { "width": 2, "color": "#f4c95d" }
-  } } }
+  "root": {
+    "background": "#16161e"
+  },
+  "sidebar": {
+    "background": "#16161e"
+  },
+  "main": {
+    "content": {
+      "pane": {
+        "background": "background",
+        "border": {
+          "width": 1,
+          "color": "#292e42"
+        },
+        "focus": {
+          "width": 2,
+          "color": "#e0af68"
+        }
+      }
+    }
+  }
 }
