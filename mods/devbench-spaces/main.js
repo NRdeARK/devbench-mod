@@ -5,7 +5,7 @@
 
 import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
-import { spaces, agents, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
+import { spaces, agents, setAgentOrder, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -560,6 +560,8 @@ export default class Spaces extends View {
 
   render() {
     AGENTS = agents();
+    // agent.next / agent.prev (alt-down / alt-up) follow the list as drawn: space, then tab, then agent.
+    setAgentOrder(spaces().flatMap((w) => (w.tabs ?? []).flatMap((c) => AGENTS.filter((a) => a.tab === c.id).map((a) => a.address))));
     const t = theme();
     const collapsed = narrow();
     const palette = ["ansi6", "ansi3", "ansi4", "ansi5", "ansi2", "ansi1"];
