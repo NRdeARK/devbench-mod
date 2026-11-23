@@ -3,8 +3,8 @@
 import { View, div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { layout } from "herdr";
-import { twinkle, drift, smooth } from "./effects.js";
-import { slotsFor, crewStep, slotOf, colorOf, placed, THROW_AT, PLACED_AT } from "./core.js";
+import { twinkle, drift, smooth, glide } from "./effects.js";
+import { slotsFor, crewPos, crewStep, slotOf, colorOf, placed, THROW_AT, PLACED_AT } from "./core.js";
 import { TREE, CREW } from "./christmas.js";
 
 function find(node, id) {
@@ -39,33 +39,33 @@ export default class Tree extends View {
       return twinkle(div().id(`hung-${s}`).absolute().left(p.x).top(p.y).size(bs).bg(colors[c]), s, 0.45);
     });
 
-    // the three characters, each carrying a bauble to its branch
-    const crew = CREW.members.map((m, c) => {
+    // the three characters walk slowly round the tree, each hanging a bauble every cycle
+    const n = CREW.members.length;
+    const back = [], front = [];
+    CREW.members.forEach((m, c) => {
       const { k, ph } = crewStep(this.tick, c);
-      const s = slotOf(k, c, CREW.members.length, slots.length);
+      const s = slotOf(k, c, n, slots.length);
       const target = slotXY(s);
-      const home = m.home(W, h);
-      const side = target.x < W / 2 ? 4 : W - size.w - 4;
-      const stand = { x: side, y: Math.max(0, Math.min(h - size.h - 2, target.y - 18)) };
-      const walking = ph >= 1 && ph <= 4;
-      const at = walking ? stand : home;
-      const hop = ph === THROW_AT || ph === PLACED_AT ? -6 : 0;
-      const body = div().id(`crew-${m.key}`).absolute().left(at.x).top(at.y + hop).w(size.w).h(size.h).tooltip(m.name)
+      const pos = crewPos(this.tick, c, n, CREW.orbit);
+      const at = { x: W / 2 + pos.x - size.w / 2, y: h - 16 + pos.y - size.h };
+      const body = div().id(`crew-${m.key}`).absolute().left(at.x).top(at.y).w(size.w).h(size.h).tooltip(m.name)
         .child(drift(div().relative().w(size.w).h(size.h).child(image(CREW.svg(m.key)).w(size.w).h(size.h)), c, 0, 2));
-      const thrown = ph >= THROW_AT;
-      const from = { x: at.x + size.w / 2 - bs / 2, y: at.y - bs - 2 };
-      const spot = thrown ? target : from;
+      (pos.front ? front : back).push(glide(glide(body, "left", CREW.tickMs), "top", CREW.tickMs));
+      const carried = { x: at.x + size.w / 2 - bs / 2, y: at.y - bs - 2 };
+      const spot = ph >= THROW_AT ? target : carried;
       const bauble = div().id(`carry-${m.key}`).absolute().left(spot.x).top(spot.y).size(bs).bg(colors[colorOf(k, c, colors.length)])
-        .opacity(ph >= PLACED_AT && ph !== 0 ? 0 : 1);
-      return [smooth(smooth(body, "left", CREW.moveMs), "top", CREW.moveMs), smooth(smooth(bauble, "left", 450), "top", 450)];
-    }).flat();
+        .opacity(ph >= PLACED_AT ? 0 : 1);
+      front.push(ph >= THROW_AT ? smooth(smooth(bauble, "left", 450), "top", 450) : glide(glide(bauble, "left", CREW.tickMs), "top", CREW.tickMs));
+    });
 
+    const layer = (kids) => div().absolute().left(0).bottom(6).w(W).h(h).children(kids);
     return div().relative().size_full()
+      .child(layer(back))
       .child(h_flex().size_full().justify_center().items_end().pb(6).child(
         div().relative().w(w).h(h).flex_none()
           .child(image(TREE.svg).w(w).h(h))
           .children(lights)))
-      // characters share the tree's coordinate space: same bottom edge and top as the tree box
-      .child(div().absolute().left(0).bottom(6).w(W).h(h).children([...hung, ...crew]));
+      // the layers share the tree's coordinate space: same bottom edge and top as the tree box
+      .child(layer([...hung, ...front]));
   }
 }

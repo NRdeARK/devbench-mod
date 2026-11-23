@@ -26,3 +26,11 @@ assert.ok(placed(0, 3, sl.length, 4).size <= 2, "staggered members may already h
 assert.ok(placed(4, 3, sl.length, 4).has(slotOf(0, 0, 3, sl.length)), "first bauble lands at phase 4");
 assert.ok(placed(400, 3, sl.length, 4).size <= sl.length, "never more baubles than slots");
 console.log("crew tests passed");
+
+import { crewPos } from "../core/core.js";
+const orb = { rx: 80, ry: 14, periodTicks: 100 };
+const p0 = crewPos(0, 0, 3, orb), p25 = crewPos(25, 0, 3, orb), p75 = crewPos(75, 0, 3, orb);
+assert.ok(Math.abs(p0.x - 80) < 1e-9 && p0.front, "starts at the right edge");
+assert.ok(p25.front && Math.abs(p25.x) < 1e-6, "quarter lap: in front, centred");
+assert.ok(!p75.front, "three quarters: behind the tree");
+console.log("orbit tests passed");

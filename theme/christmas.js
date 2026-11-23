@@ -69,16 +69,17 @@ export function bulbs(lights) {
 }
 
 // The decorating crew: three pixel characters (theme/sprites/char-*.px, 16x13 at scale 3) that hang baubles on
-// the tree. home is where each waits, in px inside the tree area (W = area width, H = tree height).
+// the tree while walking slowly round it.
 export const CREW = {
   tickMs: 400,
-  moveMs: 900,
+  // The slow walk around the tree: an ellipse at the tree's foot, one lap per periodTicks ticks.
+  orbit: { rx: 92, ry: 12, periodTicks: 90 },
   baubleSize: 6,
   colors: ["#f7768e", "#e0af68", "#9ece6a", "#7aa2f7"],
   members: [
-    { key: "claude", name: "Claude", home: (W, H) => ({ x: 4, y: H - 42 }) },
-    { key: "agy", name: "Antigravity", home: (W, H) => ({ x: W - 52, y: 20 }) },
-    { key: "codex", name: "Sol (Codex)", home: (W, H) => ({ x: W - 52, y: H - 42 }) },
+    { key: "claude", name: "Claude" },
+    { key: "agy", name: "Antigravity" },
+    { key: "codex", name: "Sol (Codex)" },
   ],
   svg: (key) => `mods/devbench-tree/char-${key}.svg`,
   size: { w: 48, h: 39 },

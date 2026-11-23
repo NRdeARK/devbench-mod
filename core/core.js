@@ -66,3 +66,10 @@ export function placed(tick, members, slots, colors) {
   }
   return out;
 }
+
+// Slow walk around the tree: each member circles an ellipse, evenly spaced. front = on the viewer's side
+// (drawn over the tree), otherwise behind it. Returns the point on the ground in px, relative to the centre.
+export function crewPos(tick, c, n, orbit) {
+  const a = ((tick / orbit.periodTicks) + c / n) * 2 * Math.PI;
+  return { x: orbit.rx * Math.cos(a), y: orbit.ry * Math.sin(a), front: Math.sin(a) >= 0 };
+}

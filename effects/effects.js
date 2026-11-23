@@ -31,3 +31,7 @@ export const twinkle = (el, i = 0, low = 0.05) =>
 // Bob a flake up and down by a few pixels, each on its own period.
 export const drift = (el, i = 0, from = 0, to = 6) =>
   FX.enabled ? el.loop("top", { from, to, period: 1800 + ((i * 421) % 1800), easing: "ease-in-out" }) : el;
+
+// Glide at constant speed (a steady walk): later changes of a property move linearly over ms.
+export const glide = (el, property, ms) =>
+  FX.enabled ? el.transition(property, { duration: ms, easing: "linear" }) : el;
