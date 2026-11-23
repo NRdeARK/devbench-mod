@@ -17,8 +17,12 @@ assert.equal(spaceState([]), null);
 assert.deepEqual(navOrder([space], [ag("a", "idle"), ag("b", "idle")]), ["a-idle", "b-idle"]);
 console.log("core tests passed");
 
-import { roster } from "../core/core.js";
-const sp = [{ id: "s1", name: "dispatcher", tabs: [{ id: "a", name: "A" }, { id: "b", name: "B" }] }];
-const r2 = roster(sp, [ag("a", "working"), ag("b", "blocked")]);
-assert.deepEqual(r2.map((e) => [e.name, e.state, e.spaceName]), [["A", "working", "dispatcher"], ["B", "blocked", "dispatcher"]]);
-console.log("roster tests passed");
+import { slotsFor, crewStep, slotOf, placed, CYCLE } from "../core/core.js";
+const sl = slotsFor(35, 46, 4);
+assert.ok(sl.length >= 12 && sl.every((s) => s.x > 0 && s.x < 140 && s.y > 0 && s.y < 184), "slots inside the tree box");
+assert.deepEqual(crewStep(0, 0), { k: 0, ph: 0 });
+assert.deepEqual(crewStep(CYCLE, 0), { k: 1, ph: 0 });
+assert.ok(placed(0, 3, sl.length, 4).size <= 2, "staggered members may already have landed one");
+assert.ok(placed(4, 3, sl.length, 4).has(slotOf(0, 0, 3, sl.length)), "first bauble lands at phase 4");
+assert.ok(placed(400, 3, sl.length, 4).size <= sl.length, "never more baubles than slots");
+console.log("crew tests passed");

@@ -68,25 +68,18 @@ export function bulbs(lights) {
   return out;
 }
 
-// Elves: one per agent tab, working on the tree. Frames are theme/sprites/elf-<frame>.px (12x16),
-// built once per colour variant. The dispatcher's elf is Santa; the rest cycle the other colours.
-export const ELF = {
-  scale: 2,
-  cols: 12,
-  rows: 16,
-  max: 8,
-  santa: "santa",
-  // state -> frames; two frames means the elf animates between them.
-  frames: { working: ["work1", "work2"], blocked: ["wave"], done: ["cheer"], idle: ["idle"] },
-  svg: (frame, variant) => `mods/devbench-tree/elf-${frame}-${variant}.svg`,
-  flipMs: 650,
-  alert: "!", // blinks above a blocked elf
+// The decorating crew: three pixel characters (theme/sprites/char-*.px, 16x13 at scale 3) that hang baubles on
+// the tree. home is where each waits, in px inside the tree area (W = area width, H = tree height).
+export const CREW = {
+  tickMs: 400,
+  moveMs: 900,
+  baubleSize: 6,
+  colors: ["#f7768e", "#e0af68", "#9ece6a", "#7aa2f7"],
+  members: [
+    { key: "claude", name: "Claude", home: (W, H) => ({ x: 4, y: H - 42 }) },
+    { key: "agy", name: "Antigravity", home: (W, H) => ({ x: W - 52, y: 20 }) },
+    { key: "codex", name: "Sol (Codex)", home: (W, H) => ({ x: W - 52, y: H - 42 }) },
+  ],
+  svg: (key) => `mods/devbench-tree/char-${key}.svg`,
+  size: { w: 48, h: 39 },
 };
-// Which elf colour an agent gets: by its program (Claude, Antigravity, Codex), Santa for the dispatcher.
-export const elfVariant = (entry) => {
-  if (entry.spaceName === "dispatcher" || entry.name === "dispatcher") return ELF.santa;
-  const k = `${entry.program?.key ?? ""} ${entry.program?.name ?? ""}`.toLowerCase();
-  return k.includes("claude") ? "claude" : k.includes("anti") || k.includes("agy") ? "antigravity" : k.includes("codex") ? "codex" : "other";
-};
-// Real agent state -> how the elf looks: idle elves are dimmed, the rest get a state-coloured badge ring.
-export const ELF_DIM = { idle: 0.55 };

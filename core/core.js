@@ -29,6 +29,40 @@ export const spaceState = (rows) => URGENCY.find((s) => rows.some((r) => r.state
 // agent.next / agent.prev order: one stop per tab row, space by space.
 export const navOrder = (spaces, agents) => spaces.flatMap((w) => tabRows(w, agents).map((r) => r.address));
 
-// One entry per agent tab, in sidebar order: who an elf stands for.
-export const roster = (spaces, agents) =>
-  spaces.flatMap((w) => tabRows(w, agents).map((r) => ({ id: r.id, space: w.id, spaceName: w.name, name: r.name, state: r.state, program: r.program })));
+// --- Decorating crew: who hangs what where, as a pure function of a tick counter. ---
+// Each member loops through a CYCLE of ticks: 0 carry a bauble, 1-2 walk to the tree, 3 throw it,
+// 4 it lands (hop), 5-7 walk home, 8-9 rest. Members are staggered so they never move in lockstep.
+export const CYCLE = 10;
+export const PLACED_AT = 4;
+export const THROW_AT = 3;
+const STAGGER = 4;
+
+// Branch spots inside the tree silhouette, in px relative to the tree's top-left.
+export function slotsFor(cols, rows, px) {
+  const cx = cols / 2, out = [];
+  [13, 17, 21, 25, 29, 33, 37].forEach((r, i) => {
+    const hw = Math.min(15.5, 1.5 + (r - 8) * 0.38);
+    const dx = [0.7, i % 2 ? 0.25 : 0.4];
+    for (const d of dx) for (const sgn of (d === 0.7 ? [-1, 1] : [i % 2 ? 1 : -1])) out.push({ x: Math.round((cx + sgn * hw * d) * px), y: r * px });
+  });
+  return out;
+}
+
+export function crewStep(tick, c) {
+  const t = tick + c * STAGGER;
+  return { k: Math.floor(t / CYCLE), ph: t % CYCLE };
+}
+export const slotOf = (k, c, n, slots) => (k * n + c * 5) % slots;
+export const colorOf = (k, c, colors) => (k * 3 + c) % colors;
+
+// Baubles currently hanging: slot -> colour index. A slot is re-hung when a later cycle picks it again.
+export function placed(tick, members, slots, colors) {
+  const out = new Map();
+  for (let c = 0; c < members; c++) {
+    const { k, ph } = crewStep(tick, c);
+    for (let j = Math.max(0, k - slots); j <= k; j++) {
+      if (j < k || ph >= PLACED_AT) out.set(slotOf(j, c, members, slots), colorOf(j, c, colors));
+    }
+  }
+  return out;
+}

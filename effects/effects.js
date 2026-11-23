@@ -24,15 +24,6 @@ export function marker(el, state, glyphs, frames) {
   return state === "blocked" ? pulse(el) : el;
 }
 
-// Alternate two overlaid frames (an animation): A fades out as B fades in, and back.
-export function flip(a, b, period = 700) {
-  if (!FX.enabled) return [a];
-  return [
-    a.loop("opacity", { from: 1, to: 0, period, easing: "linear" }),
-    b.loop("opacity", { from: 0, to: 1, period, easing: "linear" }),
-  ];
-}
-
 // A light that blinks on its own rhythm: pass its index so neighbours drift out of step.
 export const twinkle = (el, i = 0, low = 0.05) =>
   FX.enabled ? el.loop("opacity", { from: 1, to: low, period: 600 + ((i * 251) % 700), easing: "linear" }) : el;
