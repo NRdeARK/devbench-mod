@@ -68,7 +68,7 @@
               "id": "tree",
               "type": "block",
               "size": {
-                "px": 190
+                "px": 205
               },
               "content": {
                 "mod": "devbench-tree"
