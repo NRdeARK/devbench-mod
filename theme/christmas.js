@@ -84,3 +84,11 @@ export const CREW = {
   size: { w: SPRITES["char-claude"].cols * SPRITES["char-claude"].scale, h: SPRITES["char-claude"].rows * SPRITES["char-claude"].scale },
   lines: ["nice tree!", "ho ho ho", "more lights?", "ship it!", "tests green", "cocoa break", "so sparkly", "need review?", "merry xmas", "brb"],
 };
+
+// The brand mark: a sheep pulling a sledge (the Herdr ram, in costume), two trot frames. Sprites sheep-a/-b.px, 2x.
+export const BRAND = {
+  frames: ["mods/devbench-brand/sheep-a.svg", "mods/devbench-brand/sheep-b.svg"],
+  w: SPRITES["sheep-a"].cols * SPRITES["sheep-a"].scale,
+  h: SPRITES["sheep-a"].rows * SPRITES["sheep-a"].scale,
+  trotMs: 280,
+};

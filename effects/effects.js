@@ -35,3 +35,12 @@ export const drift = (el, i = 0, from = 0, to = 6) =>
 // Glide at constant speed (a steady walk): later changes of a property move linearly over ms.
 export const glide = (el, property, ms) =>
   FX.enabled ? el.transition(property, { duration: ms, easing: "linear" }) : el;
+
+// Alternate two overlaid frames (an animation): A fades out as B fades in, and back.
+export function flip(a, b, period = 700) {
+  if (!FX.enabled) return [a];
+  return [
+    a.loop("opacity", { from: 1, to: 0, period, easing: "linear" }),
+    b.loop("opacity", { from: 0, to: 1, period, easing: "linear" }),
+  ];
+}
