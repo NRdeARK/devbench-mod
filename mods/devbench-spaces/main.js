@@ -477,6 +477,7 @@ export default class Spaces extends View {
     const on = w.active;
     const rows = tabRows(w);
     const shut = this.shut.has(w.id) && rows.length > 0;
+    const here = focused()?.tab; // the tab that has the keyboard: its row is marked
     const fromIndex = this.pressed === null ? -1 : spaces().findIndex(s => s.id === this.pressed);
     return v_flex()
       .relative()
@@ -548,7 +549,9 @@ export default class Spaces extends View {
         .items_center()
         .text_size(11.5)
         .text_color(t.foreground)
-        .hover((el) => el.bg(t.hover))
+        .relative()
+        .when(c.id === here, (el) => el.bg(t.hover).font_semibold().child(div().absolute().left(12).top(4).bottom(4).w(2).rounded(1).bg(t.accent)))
+        .when(c.id !== here, (el) => el.hover((b) => b.bg(t.hover)))
         .on_mouse_down("left", () => { this.pressed = null; })
         .on_mouse_up("left", () => { run("space.select", { id: w.id }); run("tab.select", { id: c.id }); })
         .gap(6)
@@ -576,6 +579,13 @@ export default class Spaces extends View {
 
   render() {
     AGENTS = agents();
+    // Follow the focus: if it moved into a folded space, unfold it so the focused row is never hidden.
+    const here = focused()?.tab;
+    if (here && here !== this.lastFocus) {
+      this.lastFocus = here;
+      const w = spaces().find((s) => tabRows(s).some((r) => r.id === here));
+      if (w && this.shut.delete(w.id)) localStorage.setItem("devbench.spaces.shut", JSON.stringify([...this.shut]));
+    }
     // agent.next / agent.prev (alt-down / alt-up) follow the list as drawn: one stop per tab row.
     setAgentOrder(navOrder(spaces(), AGENTS));
     const t = theme();
